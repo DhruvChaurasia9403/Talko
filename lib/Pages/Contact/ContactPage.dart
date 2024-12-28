@@ -1,3 +1,4 @@
+import 'package:chatting/Controller/ContactsController.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chatting/Config/Strings.dart';
@@ -12,7 +13,7 @@ class Contactpage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     RxBool isSearchEnable = false.obs;
-
+    Contactscontroller contactscontroller = Get.put(Contactscontroller());
     return Scaffold(
       appBar: AppBar(
         title: Text("Select Contact"),
@@ -52,70 +53,15 @@ class Contactpage extends StatelessWidget {
               child: Text("Contacts on ${AppStrings.appName}",
                   style: Theme.of(context).textTheme.labelLarge),
             ),
-            const Column(
-              children: [
-                chatTile(
-                  imageUrl: AssetsImage.girlPic,
-                  name: "kallu Kalia",
-                  lastChat: "mai too hu kalua",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.boyPic,
-                  name: "Dhruv",
-                  lastChat: "hey",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.girlPic,
-                  name: "kallu Kalia",
-                  lastChat: "mai too hu kalua",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.boyPic,
-                  name: "Dhruv",
-                  lastChat: "hey",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.girlPic,
-                  name: "kallu Kalia",
-                  lastChat: "mai too hu kalua",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.boyPic,
-                  name: "Dhruv",
-                  lastChat: "hey",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.girlPic,
-                  name: "kallu Kalia",
-                  lastChat: "mai too hu kalua",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.boyPic,
-                  name: "Dhruv",
-                  lastChat: "hey",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.girlPic,
-                  name: "kallu Kalia",
-                  lastChat: "mai too hu kalua",
-                  lastSeen: "time",
-                ),
-                chatTile(
-                  imageUrl: AssetsImage.boyPic,
-                  name: "Dhruv",
-                  lastChat: "hey",
-                  lastSeen: "time",
-                ),
-              ],
+            Obx(()=>Column(
+              children: contactscontroller.userList.map((e)=> chatTile(
+                imageUrl: AssetsImage.boyPic,
+                name: "User",
+                lastChat: "Hello",
+                lastSeen: "Online",
+              )).toList(),
             ),
+            )
           ],
         ),
       ),
