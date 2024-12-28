@@ -21,7 +21,7 @@ class Primarybutton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.login_outlined),
+                Icon(icon),
                 const SizedBox(width:10),
                 Text(btnName,style:Theme.of(context).textTheme.bodyLarge),
               ],

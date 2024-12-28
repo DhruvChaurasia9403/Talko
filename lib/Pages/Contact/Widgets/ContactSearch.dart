@@ -14,7 +14,7 @@ class ContactSearch extends StatelessWidget {
             border: Border.all(
               color: isFocused.value
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.secondary,
+                  : Theme.of(context).colorScheme.onBackground,
             ),
             color: isFocused.value
                 ? Theme.of(context).colorScheme.primaryContainer
