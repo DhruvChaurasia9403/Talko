@@ -1,4 +1,4 @@
-class UserModel {
+class ChatModel {
   String? id;
   String? message;
   String? senderName;
@@ -13,7 +13,7 @@ class UserModel {
   List<String>? reactions;
   List<dynamic>? replies;
 
-  UserModel({
+  ChatModel({
     this.id,
     this.message,
     this.senderName,
@@ -29,7 +29,7 @@ class UserModel {
     this.replies,
   });
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
+  factory ChatModel.fromJson(Map<String, dynamic> json) => ChatModel(
     id: json["id"],
     message: json["message"],
     senderName: json["senderName"],

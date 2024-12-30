@@ -10,13 +10,13 @@ class contactTile extends StatelessWidget {
     return ListView(
       children: [
         chatTile(
-            imageUrl: AssetsImage.girlPic,
+            imageUrl: AssetsImage.defaultPic,
             name:"kallu Kalia",
             lastChat: "mai too hu kalua",
             lastSeen: "time",
         ),
         chatTile(
-          imageUrl: AssetsImage.boyPic,
+          imageUrl: AssetsImage.defaultPic,
           name:"Dhruv",
           lastChat: "hey",
           lastSeen: "time",

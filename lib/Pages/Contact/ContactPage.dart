@@ -6,6 +6,7 @@ import 'package:chatting/Config/images.dart';
 import 'package:chatting/Pages/Contact/Widgets/ContactSearch.dart';
 import 'package:chatting/Pages/Contact/Widgets/NewContactTile.dart';
 import 'package:chatting/Pages/Home/HomeWidgets/chatTile.dart';
+import 'package:chatting/Model/UserModel.dart'; // Ensure this import is correct
 
 class Contactpage extends StatelessWidget {
   const Contactpage({super.key});
@@ -55,9 +56,9 @@ class Contactpage extends StatelessWidget {
             ),
             Obx(()=>Column(
               children: contactscontroller.userList.map((e)=> chatTile(
-                imageUrl: AssetsImage.boyPic,
-                name: "User",
-                lastChat: "Hello",
+                imageUrl: (e.profileImage?.isEmpty ?? true) ? AssetsImage.defaultPic : e.profileImage!,
+                name: e.name??"Name",
+                lastChat: e.about??"hey there",
                 lastSeen: "Online",
               )).toList(),
             ),
