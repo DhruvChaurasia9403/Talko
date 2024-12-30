@@ -28,7 +28,18 @@ class chatTile extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Image.asset(imageUrl,width:70),
+                      child: Container(
+                        height: 70,
+                        width: 70,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: Image.network(
+                            imageUrl,
+                            width:70,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
