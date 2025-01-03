@@ -47,6 +47,7 @@ dependencies:
   cloudinary_flutter:
   cloudinary_url_gen:
   http:
+  uuid:
 
 
 dev_dependencies:

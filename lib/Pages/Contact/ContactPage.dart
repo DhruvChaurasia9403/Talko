@@ -56,6 +56,7 @@ class Contactpage extends StatelessWidget {
             ),
             Obx(()=>Column(
               children: contactscontroller.userList.map((e)=> chatTile(
+                userModel: e,
                 imageUrl: (e.profileImage?.isEmpty ?? true) ? AssetsImage.defaultPic : e.profileImage!,
                 name: e.name??"Name",
                 lastChat: e.about??"hey there",

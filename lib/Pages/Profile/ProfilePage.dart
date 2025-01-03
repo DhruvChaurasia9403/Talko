@@ -43,6 +43,15 @@ class ProfilePage extends StatelessWidget {
           "Profile",
           style: Theme.of(context).textTheme.labelLarge,
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed:(){
+              profileController.signOut();
+              Get.offAllNamed('/loginPage');
+            }
+          )
+        ],
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new),
           onPressed: () {
