@@ -7,8 +7,9 @@ import 'package:chatting/Pages/Profile/ProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
 import '../../Controller/ProfileController.dart';
+import '../../Controller/DBController.dart'; // Import DBController
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -16,11 +17,12 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     TabController tabController = TabController(length: 3, vsync: this);
     Get.put(ProfileController());
+    Get.put(DBcontroller()); // Initialize DBController
 
     ImagePickerController imagePickerController = Get.put(ImagePickerController());
     return Scaffold(
@@ -33,34 +35,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
         ),
         actions: [
           IconButton(
-            onPressed: (){
+            onPressed: () {
               imagePickerController.pickImage();
             },
             icon: Icon(Icons.search),
           ),
           IconButton(
-            onPressed: (){
-              Get.to(()=>ProfilePage());
+            onPressed: () {
+              Get.to(() => ProfilePage());
             },
             icon: Icon(Icons.more_vert),
           )
         ],
-        title: Text(AppStrings.appName,style:Theme.of(context).textTheme.headlineSmall?.copyWith(color:Theme.of(context).colorScheme.secondary)),
-        bottom:tabBar(tabController,context),
+        title: Text(AppStrings.appName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.secondary)),
+        bottom: tabBar(tabController, context),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (){
+        onPressed: () {
           Get.offAllNamed('/contactPage');
         },
-        child: Icon(Icons.add,color:Colors.white),
+        child: Icon(Icons.add, color: Colors.white),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: TabBarView(
         controller: tabController,
         children: [
           contactTile(),
-        ]
-      )
+        ],
+      ),
     );
   }
 }

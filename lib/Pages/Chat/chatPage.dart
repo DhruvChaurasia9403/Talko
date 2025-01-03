@@ -1,12 +1,20 @@
 import 'package:chatting/Config/images.dart';
+import 'package:chatting/Controller/ChatController.dart';
+import 'package:chatting/Model/UserModel.dart';
 import 'package:chatting/Pages/Chat/Widgets/SenderChat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+
+import '../../Model/ChatModel.dart';
 class chatPage extends StatelessWidget {
-  const chatPage({super.key});
+  final UserModel userModel;
+  const chatPage({super.key,required this.userModel});
 
   @override
   Widget build(BuildContext context) {
+    ChatController chatController = Get.put(ChatController());
+    TextEditingController messageController = TextEditingController();
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -33,7 +41,7 @@ class chatPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Dhruv",style:Theme.of(context).textTheme.bodyLarge),
+                  Text(userModel.name??"Unknown",style:Theme.of(context).textTheme.bodyLarge),
                   Text(
                     "Online",
                     style:Theme.of(context).textTheme.labelSmall,
@@ -71,6 +79,7 @@ class chatPage extends StatelessWidget {
             ),
             Expanded(
               child:TextField(
+                controller: messageController,
                 decoration:InputDecoration(
                   filled:false,
                   hintText:"Type message ...",
@@ -88,16 +97,24 @@ class chatPage extends StatelessWidget {
                 child: SvgPicture.asset(AssetsImage.gallerySVG),
               ),
             ),
-            Container(
-              width:50,
-              height:50,
-              decoration: BoxDecoration(
+            InkWell(
+              onTap: (){
+                if(messageController.text.isNotEmpty){
+                  chatController.sendMessage(userModel.id!, messageController.text);
+                  messageController.clear();
+                }
+              },
+              child: Container(
+                width:50,
+                height:50,
+                decoration: BoxDecoration(
 
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SvgPicture.asset(AssetsImage.sendSVG,),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SvgPicture.asset(AssetsImage.sendSVG,),
+                ),
               ),
             ),
           ],

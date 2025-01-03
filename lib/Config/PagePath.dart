@@ -18,11 +18,11 @@ var pagePath =[
     page: ()=>HomePage(),
     transition: Transition.fadeIn,
   ),
-  GetPage(
-    name: "/chatPage",
-    page: ()=>chatPage(),
-    transition: Transition.fadeIn,
-  ),
+  // GetPage(
+  //   name: "/chatPage",
+  //   page: ()=>chatPage(),
+  //   transition: Transition.fadeIn,
+  // ),
   // GetPage(
   //   name:"/profilePage",
   //   page:()=>profilePage(),

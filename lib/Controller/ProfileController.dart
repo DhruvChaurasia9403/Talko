@@ -147,4 +147,15 @@ class ProfileController extends GetxController {
     final signatureString = "public_id=$publicId&timestamp=$timestamp$apiSecret";
     return sha1.convert(utf8.encode(signatureString)).toString();
   }
+
+
+
+  Future<void> signOut() async {
+    try {
+      await auth.signOut();
+      print("User signed out successfully");
+    } catch (e) {
+      print("Error signing out: $e");
+    }
+  }
 }
