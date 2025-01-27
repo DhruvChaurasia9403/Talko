@@ -1,51 +1,66 @@
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ChatController.dart';
 import 'package:chatting/Model/UserModel.dart';
+import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
 import 'package:chatting/Pages/Chat/Widgets/SenderChat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../Model/ChatModel.dart';
+
 class chatPage extends StatelessWidget {
   final UserModel userModel;
-  const chatPage({super.key,required this.userModel});
+  const chatPage({super.key, required this.userModel});
 
   @override
   Widget build(BuildContext context) {
     ChatController chatController = Get.put(ChatController());
     TextEditingController messageController = TextEditingController();
+    ChatModel chatModel = ChatModel();
+
+
     return Scaffold(
       appBar: AppBar(
         actions: [
           IconButton(
-            onPressed:(){},
-            icon:Icon(Icons.phone),
+            onPressed: () {},
+            icon: const Icon(Icons.phone),
           ),
           IconButton(
-            onPressed:(){},
-            icon:Icon(Icons.videocam),
+            onPressed: () {},
+            icon: const Icon(Icons.videocam),
           )
         ],
-        leading:IconButton(onPressed: (){}, icon: Icon(Icons.arrow_back_ios_new)),
-        title:Row(
-          mainAxisAlignment: MainAxisAlignment.start ,
+        leading: IconButton(
+          onPressed: () {
+            Get.back();
+          },
+          icon: const Icon(Icons.arrow_back_ios_new),
+        ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Container(
-              height:50,
-              width:50,
-              child: Image.asset(AssetsImage.boyPic)
+            SizedBox(
+              height: 50,
+              width: 50,
+              child: Image.asset(AssetsImage.boyPic),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+            const SizedBox(width: 8),
+            Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(userModel.name??"Unknown",style:Theme.of(context).textTheme.bodyLarge),
                   Text(
-                    "Online",
-                    style:Theme.of(context).textTheme.labelSmall,
-                  )
+                    userModel.name ?? "Unknown",
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    userModel.status ?? "Offline",
+                    style: Theme.of(context).textTheme.labelLarge,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
@@ -54,111 +69,83 @@ class chatPage extends StatelessWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Container(
-        margin:EdgeInsets.all(10),
-        padding:EdgeInsets.symmetric(vertical: 5,horizontal: 5),
+        margin: const EdgeInsets.all(10),
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(100),
-          border:Border.all(color:Theme.of(context).colorScheme.onPrimaryContainer),
-          color:Theme.of(context).colorScheme.primaryContainer
+          border: Border.all(color: Theme.of(context).colorScheme.onPrimaryContainer),
+          color: Theme.of(context).colorScheme.primaryContainer,
         ),
-        child:Row(
+        child: Row(
           children: [
-            Container(
-              height:50,
-              width:50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SvgPicture.asset(
-                  AssetsImage.micSVG,
-                  width:25,
+            IconButton(
+              icon: SvgPicture.asset(AssetsImage.micSVG, width: 25),
+              onPressed: () {},
+            ),
+            Expanded(
+              child: TextField(
+                controller: messageController,
+                decoration: const InputDecoration(
+                  filled: false,
+                  hintText: "Type message ...",
+                  border: InputBorder.none,
                 ),
               ),
             ),
-            Expanded(
-              child:TextField(
-                controller: messageController,
-                decoration:InputDecoration(
-                  filled:false,
-                  hintText:"Type message ...",
-                )
-              )
+            IconButton(
+              icon: SvgPicture.asset(AssetsImage.gallerySVG),
+              onPressed: () {},
             ),
-            Container(
-              height:50,
-              width:50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SvgPicture.asset(AssetsImage.gallerySVG),
-              ),
-            ),
-            InkWell(
-              onTap: (){
-                if(messageController.text.isNotEmpty){
-                  chatController.sendMessage(userModel.id!, messageController.text);
+            IconButton(
+              icon: SvgPicture.asset(AssetsImage.sendSVG),
+              onPressed: () {
+                if (messageController.text.trim().isNotEmpty) {
+
+                  chatController.sendMessage(userModel.id!, messageController.text.trim());
                   messageController.clear();
                 }
               },
-              child: Container(
-                width:50,
-                height:50,
-                decoration: BoxDecoration(
-
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SvgPicture.asset(AssetsImage.sendSVG,),
-                ),
-              ),
             ),
           ],
-        )
+        ),
       ),
-
-
-      body:Container(
-        margin: EdgeInsets.only(bottom: 70),
+      body: Container(
+        margin: const EdgeInsets.only(bottom: 70),
         child: Padding(
           padding: const EdgeInsets.all(10.0),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                senderChat(
-                  sms: "Hey! Dhruv this side. How are you ?",
-                  isComing: true,
-                  time: "time",
-                  imageUrl: "",
-                  status: "seen",
-                ),
-                senderChat(
-                  sms: "hello Dhruv . I'm fine . What about you",
-                  isComing: false,
-                  time: "time",
-                  imageUrl: "",
-                  status: "seen",
-                ),
-                senderChat(
-                  sms: "hey",
-                  isComing: false,
-                  time: "time",
-                  imageUrl: "https://images.unsplash.com/photo-1721332155484-5aa73a54c6d2?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxfHx8ZW58MHx8fHx8",
-                  status: "seen",
-                ),
-                senderChat(
-                  sms: "hey",
-                  isComing: true,
-                  time: "time",
-                  imageUrl: "https://images.unsplash.com/photo-1721332155484-5aa73a54c6d2?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxfHx8ZW58MHx8fHx8",
-                  status: "seen",
-                ),
-              ],
-            ),
+          child: StreamBuilder<List<ChatModel>>(
+            stream: chatController.getMessages(userModel.id!),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Center(
+                  child: Text("An error occurred. Please try again."),
+                );
+              } else if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else if (snapshot.data == null || snapshot.data!.isEmpty) {
+                return const Center(
+                  child: Text("No messages found."),
+                );
+              } else {
+                final messages = snapshot.data!;
+                return ListView.builder(
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    return SenderChat(
+                      sms: message.message,
+                      isComing: message.senderId != userModel.id,
+                      status: MessageStatus.values.firstWhere(
+                            (e) => e.toString() == 'MessageStatus.${message.readStatus}',
+                        orElse: () => MessageStatus.unknown,
+                      ),
+                    );
+                  },
+                );
+              }
+            },
           ),
         ),
       ),

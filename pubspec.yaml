@@ -48,8 +48,10 @@ dependencies:
   cloudinary_url_gen:
   http:
   uuid:
+  intl:
 
 
+  crypto: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

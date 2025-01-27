@@ -14,7 +14,7 @@ class ContactSearch extends StatelessWidget {
             border: Border.all(
               color: isFocused.value
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onBackground,
+                  : Theme.of(context).colorScheme.onSurface,
             ),
             color: isFocused.value
                 ? Theme.of(context).colorScheme.primaryContainer
@@ -29,7 +29,7 @@ class ContactSearch extends StatelessWidget {
                     }),
                     decoration: InputDecoration(
                       hintText: 'Search...',
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
                         borderSide: BorderSide.none,

@@ -6,7 +6,7 @@ import 'package:chatting/Config/images.dart';
 import 'package:chatting/Pages/Contact/Widgets/ContactSearch.dart';
 import 'package:chatting/Pages/Contact/Widgets/NewContactTile.dart';
 import 'package:chatting/Pages/Home/HomeWidgets/chatTile.dart';
-import 'package:chatting/Model/UserModel.dart'; // Ensure this import is correct
+// Ensure this import is correct
 
 class Contactpage extends StatelessWidget {
   const Contactpage({super.key});
@@ -15,14 +15,15 @@ class Contactpage extends StatelessWidget {
   Widget build(BuildContext context) {
     RxBool isSearchEnable = false.obs;
     Contactscontroller contactscontroller = Get.put(Contactscontroller());
+    print("jkfghajhfjhsadjfhajdhflkjahkfhakjdsj HHHooOOOOOOOOOOOOOOO__________________________________________________________________________________ ");
     return Scaffold(
       appBar: AppBar(
-        title: Text("Select Contact"),
+        title: const Text("Select Contact"),
         actions: [
           Obx(() => IconButton(
             icon: isSearchEnable.value
-                ? Icon(Icons.close)
-                : Icon(Icons.search),
+                ? const Icon(Icons.close)
+                : const Icon(Icons.search),
             onPressed: () {
               isSearchEnable.value = !isSearchEnable.value;
             },
@@ -34,21 +35,21 @@ class Contactpage extends StatelessWidget {
         child: ListView(
           children: [
             Obx(() => isSearchEnable.value
-                ? ContactSearch()
-                : SizedBox(height: 2)),
-            SizedBox(height: 6),
+                ? const ContactSearch()
+                : const SizedBox(height: 2)),
+            const SizedBox(height: 6),
             NewContactTile(
               btnName: "New Contact",
               icon: Icons.person_add,
               onTap: () {},
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             NewContactTile(
               btnName: "New Group",
               icon: Icons.group_add,
               onTap: () {},
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: Text("Contacts on ${AppStrings.appName}",

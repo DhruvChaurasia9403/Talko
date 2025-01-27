@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 class ChatModel {
   String? id;
   String? message;
@@ -12,7 +13,6 @@ class ChatModel {
   String? documentUrl;
   List<String>? reactions;
   List<dynamic>? replies;
-
   ChatModel({
     this.id,
     this.message,
@@ -28,14 +28,13 @@ class ChatModel {
     this.reactions,
     this.replies,
   });
-
   factory ChatModel.fromJson(Map<String, dynamic> json) => ChatModel(
     id: json["id"],
     message: json["message"],
     senderName: json["senderName"],
     senderId: json["senderId"],
     receiverId: json["receiverId"],
-    timestamp: json["timestamp"] != null ? DateTime.parse(json["timestamp"]) : null,
+    timestamp: json["timestamp"] != null ? (json["timestamp"] as Timestamp).toDate() : null,
     readStatus: json["readStatus"],
     imageUrl: json["imageUrl"],
     videoUrl: json["videoUrl"],
@@ -44,14 +43,13 @@ class ChatModel {
     reactions: json["reactions"] != null ? List<String>.from(json["reactions"].map((x) => x)) : null,
     replies: json["replies"] != null ? List<dynamic>.from(json["replies"].map((x) => x)) : null,
   );
-
   Map<String, dynamic> toJson() => {
     "id": id,
     "message": message,
     "senderName": senderName,
     "senderId": senderId,
     "receiverId": receiverId,
-    "timestamp": timestamp?.toIso8601String(),
+    "timestamp": timestamp != null ? Timestamp.fromDate(timestamp!) : null,
     "readStatus": readStatus,
     "imageUrl": imageUrl,
     "videoUrl": videoUrl,

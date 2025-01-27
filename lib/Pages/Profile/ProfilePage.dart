@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:chatting/Controller/ImagePickerController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
@@ -6,7 +5,6 @@ import 'package:chatting/Widgets/PrimaryButton.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -22,7 +20,7 @@ class ProfilePage extends StatelessWidget {
     // Function to update the profile image in Firebase
     Future<void> updateProfileImageInFirebase(String imageUrl) async {
       try {
-        final String userId = profileController.currentUser.value?.id ?? "";
+        final String userId = profileController.currentUser.value.id ?? "";
         if (userId.isNotEmpty) {
           await FirebaseFirestore.instance
               .collection('users')
@@ -45,38 +43,34 @@ class ProfilePage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
             onPressed:(){
+              Get.offAllNamed('/authPage');
               profileController.signOut();
-              Get.offAllNamed('/loginPage');
             }
           )
         ],
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () {
             Get.offAllNamed('/homePage');
           },
         ),
       ),
       body: Obx(() {
-        if (profileController.currentUser.value == null) {
-          return Center(child: CircularProgressIndicator());
-        }
-
-        final currentUser = profileController.currentUser.value!;
+        final currentUser = profileController.currentUser.value;
         final TextEditingController name = TextEditingController(text: currentUser.name ?? "");
         final TextEditingController phone = TextEditingController(text: currentUser.phoneNumber ?? "");
         final TextEditingController about = TextEditingController(text: currentUser.about ?? "");
 
         return Padding(
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           child: Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(10),
@@ -99,7 +93,7 @@ class ProfilePage extends StatelessWidget {
                                   width: 200,
                                   height: 200,
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.background,
+                                    color: Theme.of(context).colorScheme.surface,
                                     borderRadius: BorderRadius.circular(100),
                                     border: Border.all(
                                       color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -115,7 +109,7 @@ class ProfilePage extends StatelessWidget {
                                       fit: BoxFit.cover,
                                     ),
                                   )
-                                      : Icon(Icons.add))
+                                      : const Icon(Icons.add))
                                       : ClipRRect(
                                     borderRadius: BorderRadius.circular(100),
                                     child: Image.network(
@@ -129,7 +123,7 @@ class ProfilePage extends StatelessWidget {
                                 width: 200,
                                 height: 200,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.background,
+                                  color: Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(100),
                                   border: Border.all(
                                     color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -144,7 +138,7 @@ class ProfilePage extends StatelessWidget {
                                     fit: BoxFit.cover,
                                   ),
                                 )
-                                    : Icon(Icons.image),
+                                    : const Icon(Icons.image),
                               );
                             }),
                           ],
@@ -159,7 +153,7 @@ class ProfilePage extends StatelessWidget {
                               decoration: InputDecoration(
                                 labelText: "Name",
                                 filled: isEdit.value,
-                                prefixIcon: Icon(Icons.person, color: Colors.white60),
+                                prefixIcon: const Icon(Icons.person, color: Colors.white60),
                               ),
                             ),
                           ),
@@ -174,7 +168,7 @@ class ProfilePage extends StatelessWidget {
                               decoration: InputDecoration(
                                 labelText: "About",
                                 filled: isEdit.value,
-                                prefixIcon: Icon(Icons.info, color: Colors.white60),
+                                prefixIcon: const Icon(Icons.info, color: Colors.white60),
                               ),
                             ),
                           ),
@@ -187,7 +181,7 @@ class ProfilePage extends StatelessWidget {
                             decoration: InputDecoration(
                               labelText: "Email",
                               fillColor: Theme.of(context).colorScheme.primaryContainer,
-                              prefixIcon: Icon(Icons.alternate_email, color: Colors.white60),
+                              prefixIcon: const Icon(Icons.alternate_email, color: Colors.white60),
                             ),
                           ),
                         ),
@@ -201,12 +195,12 @@ class ProfilePage extends StatelessWidget {
                               decoration: InputDecoration(
                                 labelText: "Phone Number",
                                 filled: isEdit.value,
-                                prefixIcon: Icon(Icons.phone, color: Colors.white60),
+                                prefixIcon: const Icon(Icons.phone, color: Colors.white60),
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(height: 50),
+                        const SizedBox(height: 50),
                         Obx(
                               () => Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -243,9 +237,9 @@ class ProfilePage extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         Obx(() {
-                          return isLoading.value ? CircularProgressIndicator() : SizedBox.shrink();
+                          return isLoading.value ? const CircularProgressIndicator() : const SizedBox.shrink();
                         }),
                       ],
                     ),

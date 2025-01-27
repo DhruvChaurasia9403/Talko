@@ -44,8 +44,9 @@ flutter {
 
 dependencies {
     // Import the Firebase BoM (Bill of Materials)
-    implementation platform('com.google.firebase:firebase-bom:33.6.0')
-
+    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+    implementation 'com.google.android.gms:play-services-base:18.5.0'
+    implementation 'com.google.android.gms:play-services-auth:21.3.0'
     // Add Firebase dependencies (adjust based on your requirements)
     implementation 'com.google.firebase:firebase-analytics' // Firebase Analytics
 }

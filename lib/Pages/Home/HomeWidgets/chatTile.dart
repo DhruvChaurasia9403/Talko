@@ -22,6 +22,7 @@ class chatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("is displaying");
     ChatController contactController = Get.put(ChatController());
     return InkWell(
       onTap: () {
@@ -33,7 +34,7 @@ class chatTile extends StatelessWidget {
         margin: const EdgeInsets.only(top: 4.5),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
-          color: Theme.of(context).colorScheme.background,
+          color: Theme.of(context).colorScheme.surface,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -42,7 +43,7 @@ class chatTile extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Container(
+                  child: SizedBox(
                     height: 70,
                     width: 70,
                     child: ClipRRect(
@@ -55,6 +56,7 @@ class chatTile extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(

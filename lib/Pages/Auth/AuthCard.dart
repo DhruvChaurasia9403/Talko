@@ -85,7 +85,7 @@ class AuthCard extends StatelessWidget {
               Obx(
                     () => isLogin.value
                     ? AuthLoginForm()
-                    : AuthSignUpForm(),
+                    : const AuthSignUpForm(),
               ),
             ],
           ),

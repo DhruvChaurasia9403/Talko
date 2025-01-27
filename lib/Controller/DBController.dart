@@ -3,15 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
-import '../Model/ChatModel.dart';
 
 class DBcontroller extends GetxController{
   final db = FirebaseFirestore.instance;
   final auth = FirebaseAuth.instance;
-
   RxBool isLoading = false.obs;
   RxList<UserModel> userList = <UserModel>[].obs;
 
+  @override
   void onInit() async{
     super.onInit();
     await getUserLIst();
@@ -27,6 +26,7 @@ class DBcontroller extends GetxController{
             ).toList(),
           }
       );
+      print(userList);
     }catch(ex){
       print(ex);
     }
