@@ -2,6 +2,7 @@ import 'package:chatting/Config/images.dart';
 import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 class SenderChat extends StatelessWidget {
   final String? sms;
   final bool isComing;
@@ -13,7 +14,7 @@ class SenderChat extends StatelessWidget {
     this.sms,
     required this.isComing,
     required this.status,
-    this.imageUrl
+    this.imageUrl,
   });
 
   @override
@@ -71,11 +72,18 @@ class SenderChat extends StatelessWidget {
                     ),
                   ),
                 ),
-              const SizedBox(height: 4),
-              if (!isComing)
-                Row(
+              const SizedBox(height: 1),
+              if (sms != null || (imageUrl != null && imageUrl!.isNotEmpty))
+                isComing
+                    ? Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
+                )
+                    : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                    ),
                     SvgPicture.asset(
                       status == MessageStatus.read
                           ? AssetsImage.doubleBlueTickSVG
@@ -84,11 +92,6 @@ class SenderChat extends StatelessWidget {
                           : AssetsImage.errorSVG,
                       height: 10,
                       width: 10,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      "12:30 PM", // Example timestamp, replace with dynamic timestamp
-                      style: Theme.of(context).textTheme.labelSmall,
                     ),
                   ],
                 ),
