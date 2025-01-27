@@ -1,5 +1,6 @@
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ChatController.dart';
+import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
 import 'package:chatting/Pages/Chat/Widgets/SenderChat.dart';
@@ -17,6 +18,7 @@ class chatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     ChatController chatController = Get.put(ChatController());
     TextEditingController messageController = TextEditingController();
+    ProfileController profileController = Get.put(ProfileController());
     ChatModel chatModel = ChatModel();
 
 
@@ -136,7 +138,7 @@ class chatPage extends StatelessWidget {
                     final message = messages[index];
                     return SenderChat(
                       sms: message.message,
-                      isComing: message.senderId != userModel.id,
+                      isComing: message.senderId != profileController.currentUser.value.id,
                       status: MessageStatus.values.firstWhere(
                             (e) => e.toString() == 'MessageStatus.${message.readStatus}',
                         orElse: () => MessageStatus.unknown,
