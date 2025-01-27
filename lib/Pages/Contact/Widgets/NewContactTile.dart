@@ -21,17 +21,17 @@ class NewContactTile extends StatelessWidget {
             Container(
               width:70,
               height:70,
-              child: Icon(
-                icon,
-                color: Theme.of(context).colorScheme.onBackground,
-                size: 35,
-              ),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(100),
               ),
+              child: Icon(
+                icon,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 35,
+              ),
             ),
-            SizedBox(width: 15),
+            const SizedBox(width: 15),
             Text(
               btnName,
               style: Theme.of(context).textTheme.bodyLarge,

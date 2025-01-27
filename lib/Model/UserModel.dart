@@ -15,8 +15,9 @@ class UserModel {
   String? profileImage;
   String? phoneNumber;
   String? about;
-  // String? createdAt;
-  // DateTime lastSeen;
+  String? status;
+  // DateTime? lastSeen; // Add the lastSeen field
+  // DateTime? accountCreated; // Add the accountCreated field
 
   UserModel({
     this.id,
@@ -25,8 +26,9 @@ class UserModel {
     this.profileImage,
     this.phoneNumber,
     this.about,
-    // this.createdAt,
-    // required this.lastSeen,
+    this.status,
+    // this.lastSeen,
+    // this.accountCreated,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -36,8 +38,9 @@ class UserModel {
     profileImage: json["profileImage"],
     phoneNumber: json["phoneNumber"],
     about: json["about"],
-    // createdAt: json["createdAt"],
-    // lastSeen: json["lastSeen"],
+    status: json["status"],
+    // lastSeen: json["lastSeen"] != null ? DateTime.parse(json["lastSeen"]) : null,
+    // accountCreated: json["accountCreated"] != null ? DateTime.parse(json["accountCreated"]) : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -47,7 +50,8 @@ class UserModel {
     "profileImage": profileImage,
     "phoneNumber": phoneNumber,
     "about": about,
-    // "createdAt": createdAt,
-    // "lastSeen": lastSeen,
+    "status": status,
+    // "lastSeen": lastSeen?.toIso8601String(),
+    // "accountCreated": accountCreated?.toIso8601String(),
   };
 }

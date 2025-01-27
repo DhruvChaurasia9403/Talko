@@ -1,6 +1,4 @@
-import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/AuthController.dart';
-import 'package:chatting/Controller/ProfileController.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -16,7 +14,7 @@ class SenderProfilePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon:Icon(Icons.arrow_back_ios_new),
+          icon:const Icon(Icons.arrow_back_ios_new),
           onPressed: (){
             Get.offAllNamed('/homePage');
           },
@@ -26,16 +24,16 @@ class SenderProfilePage extends StatelessWidget {
             onPressed: (){
               Get.offAllNamed('/updateProfile');
             },
-            icon: Icon(Icons.edit)),
+            icon: const Icon(Icons.edit)),
         ],
-        title:Text("Profile"),
+        title:const Text("Profile"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            Profileinfo(),
-            Spacer(),
+            const Profileinfo(),
+            const Spacer(),
             ElevatedButton(
               onPressed: (){
                 authController.logOutUser();

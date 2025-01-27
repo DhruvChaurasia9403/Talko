@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -113,9 +112,9 @@ class ProfileController extends GetxController {
 
   Future<void> deleteImageFromCloudinary(String imageUrl) async {
     try {
-      final cloudName = "dgsxsujn9"; // Replace with your Cloudinary cloud name
-      final apiKey = "298341531231328"; // Replace with your Cloudinary API key
-      final apiSecret = "P8cYl99PCaAgDTvcJ7XKV6xwnLE"; // Replace with your Cloudinary API secret
+      const cloudName = "dgsxsujn9"; // Replace with your Cloudinary cloud name
+      const apiKey = "298341531231328"; // Replace with your Cloudinary API key
+      const apiSecret = "P8cYl99PCaAgDTvcJ7XKV6xwnLE"; // Replace with your Cloudinary API secret
 
       // Extract public ID from the image URL
       final publicId = imageUrl.split('/').last.split('.').first;

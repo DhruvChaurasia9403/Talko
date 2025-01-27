@@ -29,7 +29,7 @@ class Profileinfo extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(height:10),
+                    const SizedBox(height:10),
                     Row(
                       mainAxisAlignment:MainAxisAlignment.center,
                       children: [
@@ -45,14 +45,14 @@ class Profileinfo extends StatelessWidget {
 
                       ],
                     ),
-                    SizedBox(height:10),
+                    const SizedBox(height:10),
                     Row(
                       mainAxisAlignment:MainAxisAlignment.center,
                       children: [
                         Obx(()=>Text(profileController.currentUser.value.email!,style:Theme.of(context).textTheme.labelLarge),)
                       ],
                     ),
-                    SizedBox(height:15),
+                    const SizedBox(height:15),
                     Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Row(
@@ -62,15 +62,15 @@ class Profileinfo extends StatelessWidget {
                             child: Row(
                               children:[
                                 Container(
-                                    padding: EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(15),
-                                      color: Theme.of(context).colorScheme.background,
+                                      color: Theme.of(context).colorScheme.surface,
                                     ),
                                     child:Row(
                                       children: [
                                         Icon(Icons.phone,color: Theme.of(context).colorScheme.secondary,),
-                                        SizedBox(width:10),
+                                        const SizedBox(width:10),
                                         Text("Call",style:Theme.of(context).textTheme.labelLarge)
                                       ],
                                     )
@@ -84,15 +84,15 @@ class Profileinfo extends StatelessWidget {
                             child: Row(
                               children:[
                                 Container(
-                                    padding: EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(15),
-                                      color: Theme.of(context).colorScheme.background,
+                                      color: Theme.of(context).colorScheme.surface,
                                     ),
                                     child:Row(
                                       children: [
                                         Icon(Icons.videocam,color: Theme.of(context).colorScheme.primary,),
-                                        SizedBox(width:10),
+                                        const SizedBox(width:10),
                                         Text("Video",style:Theme.of(context).textTheme.labelLarge)
                                       ],
                                     )
@@ -106,15 +106,15 @@ class Profileinfo extends StatelessWidget {
                             child: Row(
                               children:[
                                 Container(
-                                    padding: EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(15),
-                                      color: Theme.of(context).colorScheme.background,
+                                      color: Theme.of(context).colorScheme.surface,
                                     ),
                                     child:Row(
                                       children: [
-                                        Icon(Icons.chat),
-                                        SizedBox(width:10),
+                                        const Icon(Icons.chat),
+                                        const SizedBox(width:10),
                                         Text("Chat",style:Theme.of(context).textTheme.labelLarge)
                                       ],
                                     )

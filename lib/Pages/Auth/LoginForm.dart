@@ -42,7 +42,7 @@ class AuthLoginForm extends StatelessWidget {
         ),
         const SizedBox(height:89),
         Obx(()=>authController.isLoading.value
-            ? CircularProgressIndicator()
+            ? const CircularProgressIndicator()
             :Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

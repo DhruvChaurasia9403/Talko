@@ -1,28 +1,25 @@
 import 'package:chatting/Config/images.dart';
+import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
-class senderChat extends StatelessWidget {
-  final String? sms; // Nullable to handle cases with no message
+class SenderChat extends StatelessWidget {
+  final String? sms;
   final bool isComing;
-  final String time;
-  final String status;
-  final String? imageUrl; // Nullable to handle cases with no image
+  final MessageStatus status;
+  final String? imageUrl;
 
-  const senderChat({
+  const SenderChat({
     super.key,
     this.sms,
     required this.isComing,
-    required this.time,
     required this.status,
-    this.imageUrl,
+    this.imageUrl
   });
 
   @override
   Widget build(BuildContext context) {
-    // Do not render anything if both message and image are null
     if ((sms == null || sms!.isEmpty) && (imageUrl == null || imageUrl!.isEmpty)) {
-      return const SizedBox.shrink(); // Returns an empty widget
+      return const SizedBox.shrink();
     }
 
     return Row(
@@ -56,7 +53,9 @@ class senderChat extends StatelessWidget {
                     maxWidth: MediaQuery.sizeOf(context).width / 1.3,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    color: isComing
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(10),
                       topRight: const Radius.circular(10),
@@ -72,39 +71,32 @@ class senderChat extends StatelessWidget {
                     ),
                   ),
                 ),
-              const SizedBox(height: 1),
-              // Message time and status
-              if (sms != null || (imageUrl != null && imageUrl!.isNotEmpty))
-                isComing
-                    ? Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: Text(
-                    time,
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                )
-                    : Row(
+              const SizedBox(height: 4),
+              if (!isComing)
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4.0),
-                      child: Text(
-                        time,
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                    ),
                     SvgPicture.asset(
-                      AssetsImage.doubleTickSVG, // Replace with your actual path
+                      status == MessageStatus.read
+                          ? AssetsImage.doubleBlueTickSVG
+                          : status == MessageStatus.delivered
+                          ? AssetsImage.doubleTickSVG
+                          : AssetsImage.errorSVG,
                       height: 10,
                       width: 10,
                     ),
+                    const SizedBox(width: 4),
+                    Text(
+                      "12:30 PM", // Example timestamp, replace with dynamic timestamp
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
                   ],
                 ),
-              const SizedBox(height:10),
+              const SizedBox(height: 10),
             ],
           ),
         ),
-        if (isComing) const Spacer(), // Push incoming messages to the left
+        if (isComing) const Spacer(),
       ],
     );
   }

@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         elevation: 10,
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: SvgPicture.asset(AssetsImage.appIconSVG),
@@ -38,13 +38,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             onPressed: () {
               imagePickerController.pickImage();
             },
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
           ),
           IconButton(
             onPressed: () {
-              Get.to(() => ProfilePage());
+              Get.to(() => const ProfilePage());
             },
-            icon: Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert),
           )
         ],
         title: Text(AppStrings.appName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.secondary)),
@@ -54,13 +54,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         onPressed: () {
           Get.offAllNamed('/contactPage');
         },
-        child: Icon(Icons.add, color: Colors.white),
         backgroundColor: Theme.of(context).colorScheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: TabBarView(
         controller: tabController,
-        children: [
+        children: const [
           contactTile(),
+          Center(child: Text('Tab 2 Content')),
+          Center(child: Text('Tab 3 Content')),
         ],
       ),
     );

@@ -56,7 +56,7 @@ class AuthSignUpForm extends StatelessWidget {
         ),
         const SizedBox(height:20),
         Obx(() => authController.isLoading.value
-            ?CircularProgressIndicator()
+            ?const CircularProgressIndicator()
             :Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

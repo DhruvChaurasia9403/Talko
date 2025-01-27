@@ -9,6 +9,8 @@ class AssetsImage{
   static const plugSVG = "$iconsPath/plug_logo_sampark.svg";
   static const doubleTickSVG = "$iconsPath/seen_double_tick.svg";
   static const sendSVG = "$iconsPath/send.svg";
+  static const doubleBlueTickSVG = "$iconsPath/double_blue_tick.svg";
+  static const errorSVG = "$iconsPath/error.svg";
   static const gallerySVG = "$iconsPath/gallery.svg";
   static const micSVG = "$iconsPath/mic.svg";
 

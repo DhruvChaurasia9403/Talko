@@ -1,21 +1,18 @@
 import 'package:chatting/Pages/Auth/AuthPage.dart';
-import 'package:chatting/Pages/Chat/chatPage.dart';
 import 'package:chatting/Pages/Contact/ContactPage.dart';
 import 'package:chatting/Pages/Home/HomePage.dart';
 import 'package:get/get.dart';
 
-import '../Pages/SenderProfile/UpdateProfile.dart';
-import '../Pages/SenderProfile/senderProfilePage.dart';
 
 var pagePath =[
   GetPage(
     name: "/authPage",
-    page: ()=>Authpage(),
+    page: ()=>const Authpage(),
     transition: Transition.fadeIn,
   ),
   GetPage(
     name: "/homePage",
-    page: ()=>HomePage(),
+    page: ()=>const HomePage(),
     transition: Transition.fadeIn,
   ),
   // GetPage(
@@ -36,7 +33,7 @@ var pagePath =[
   // ),
   GetPage(
     name: "/contactPage",
-    page: ()=>Contactpage(),
+    page: ()=>const Contactpage(),
     transition: Transition.fadeIn,
   )
 ];

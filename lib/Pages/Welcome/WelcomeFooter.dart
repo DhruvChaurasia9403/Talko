@@ -13,6 +13,7 @@ class Welcomefooter extends StatelessWidget {
          SlideAction(
            onSubmit: (){
              Get.offAllNamed("/authPage");
+             return null;
            },
            sliderRotate: true,
            innerColor: Theme.of(context).colorScheme.secondary,

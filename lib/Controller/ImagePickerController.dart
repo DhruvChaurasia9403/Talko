@@ -1,5 +1,3 @@
-import 'package:chatting/Controller/ProfileController.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 

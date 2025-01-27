@@ -9,19 +9,19 @@ class Updateprofile extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon:Icon(Icons.arrow_back_ios_new),
+          icon:const Icon(Icons.arrow_back_ios_new),
           onPressed: (){
             Get.offAllNamed('/profilePage');
           },
         ),
-        title:Text("Update Profile"),
+        title:const Text("Update Profile"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
             Container(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 color:Theme.of(context).colorScheme.primaryContainer,
@@ -34,12 +34,12 @@ class Updateprofile extends StatelessWidget {
                         Container(
                           width:200,
                           height:200,
-                          child: Center(
-                            child: Icon(Icons.camera_alt,size:50,color:Theme.of(context).colorScheme.onPrimaryContainer),
-                          ),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(100),
-                            color:Theme.of(context).colorScheme.background,
+                            color:Theme.of(context).colorScheme.surface,
+                          ),
+                          child: Center(
+                            child: Icon(Icons.camera_alt,size:50,color:Theme.of(context).colorScheme.onPrimaryContainer),
                           ),
                         ),
                         Padding(
@@ -50,7 +50,7 @@ class Updateprofile extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SizedBox(height:10),
+                        const SizedBox(height:10),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Row(
@@ -67,7 +67,7 @@ class Updateprofile extends StatelessWidget {
                             hintStyle: Theme.of(context).textTheme.labelMedium,
                           ),
                         ),
-                        SizedBox(height:10),
+                        const SizedBox(height:10),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Row(
@@ -84,7 +84,7 @@ class Updateprofile extends StatelessWidget {
                             hintStyle: Theme.of(context).textTheme.labelMedium,
                           ),
                         ),
-                        SizedBox(height:10),
+                        const SizedBox(height:10),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Row(
@@ -102,7 +102,7 @@ class Updateprofile extends StatelessWidget {
                             hintStyle: Theme.of(context).textTheme.labelMedium,
                           ),
                         ),
-                        SizedBox(height:20),
+                        const SizedBox(height:20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
