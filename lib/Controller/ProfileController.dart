@@ -18,13 +18,17 @@ class ProfileController extends GetxController {
     if (auth.currentUser != null) {
       print("Authenticated User: ${auth.currentUser!.uid}");
       await getUserDetails(); // Ensure this completes before proceeding
+      updateOnlineStatus(true); // Set user as online
     } else {
       print("User not authenticated.");
     }
   }
 
-
-
+  @override
+  void onClose() {
+    super.onClose();
+    updateOnlineStatus(false); // Set user as offline
+  }
 
   // Fetch user details from Firestore
   Future<void> getUserDetails() async {
@@ -46,10 +50,15 @@ class ProfileController extends GetxController {
     }
   }
 
-
-
-
-
+  // Update user's online status
+  void updateOnlineStatus(bool isOnline) {
+    if (auth.currentUser != null) {
+      db.collection('users').doc(auth.currentUser!.uid).update({
+        'status': isOnline ? 'online' : 'offline',
+        'lastSeen': isOnline ? null : FieldValue.serverTimestamp(),
+      });
+    }
+  }
 
   // Upload Image to Cloudinary and return the image URL
   Future<String?> uploadImageToCloudinary(String imagePath) async {
@@ -79,7 +88,6 @@ class ProfileController extends GetxController {
     }
   }
 
-
   // Update user profile in Firebase
   Future<void> updateUserProfile({required String imageUrl, required String name, required String about, required String phoneNumber}) async {
     try {
@@ -107,8 +115,6 @@ class ProfileController extends GetxController {
       print("Error updating user profile: $e");
     }
   }
-
-
 
   Future<void> deleteImageFromCloudinary(String imageUrl) async {
     try {
@@ -146,8 +152,6 @@ class ProfileController extends GetxController {
     final signatureString = "public_id=$publicId&timestamp=$timestamp$apiSecret";
     return sha1.convert(utf8.encode(signatureString)).toString();
   }
-
-
 
   Future<void> signOut() async {
     try {
