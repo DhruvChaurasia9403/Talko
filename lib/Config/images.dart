@@ -13,6 +13,7 @@ class AssetsImage{
   static const errorSVG = "$iconsPath/error.svg";
   static const gallerySVG = "$iconsPath/gallery.svg";
   static const micSVG = "$iconsPath/mic.svg";
+  static const singleTickSVG = "$iconsPath/single_tick.svg";
 
 
 

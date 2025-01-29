@@ -28,7 +28,7 @@ class ChatController extends GetxController {
       message: message,
       senderId: auth.currentUser!.uid,
       receiverId: targetUserId,
-      // timestamp: DateTime.now(),
+      timestamp: DateTime.now(),
       readStatus: 'sent',
     );
     try {
@@ -44,8 +44,18 @@ class ChatController extends GetxController {
     return db.collection("chats")
         .doc(roomId)
         .collection("messages")
-        .orderBy("timestamp", descending: true)
+        .orderBy("timestamp", descending: false)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => ChatModel.fromJson(doc.data())).toList());
+  }
+
+  Future<void> updateMessageReadStatus(String roomId, String messageId) async {
+    try {
+      await db.collection("chats").doc(roomId).collection("messages").doc(messageId).update({
+        'readStatus': 'read',
+      });
+    } catch (ex) {
+      print(ex);
+    }
   }
 }

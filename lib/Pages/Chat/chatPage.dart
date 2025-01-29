@@ -4,26 +4,51 @@ import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
 import 'package:chatting/Pages/Chat/Widgets/SenderChat.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../Model/ChatModel.dart';
 
-class chatPage extends StatelessWidget {
+class chatPage extends StatefulWidget {
   final UserModel userModel;
   const chatPage({super.key, required this.userModel});
 
   @override
+  _chatPageState createState() => _chatPageState();
+}
+
+class _chatPageState extends State<chatPage> {
+  final ScrollController _scrollController = ScrollController();
+  late ChatController chatController;
+  late ProfileController profileController;
+  final TextEditingController messageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    chatController = Get.put(ChatController());
+    profileController = Get.put(ProfileController());
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    ChatController chatController = Get.put(ChatController());
-    TextEditingController messageController = TextEditingController();
-    ProfileController profileController = Get.put(ProfileController());
-    ChatModel chatModel = ChatModel();
-
-
     return Scaffold(
       appBar: AppBar(
+        elevation: 1,
+        shadowColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.background,
         actions: [
           IconButton(
             onPressed: () {},
@@ -46,7 +71,13 @@ class chatPage extends StatelessWidget {
             SizedBox(
               height: 50,
               width: 50,
-              child: Image.asset(AssetsImage.boyPic),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: Image.network(
+                  widget.userModel.profileImage ?? AssetsImage.defaultPic,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
             const SizedBox(width: 8),
             Flexible(
@@ -54,14 +85,38 @@ class chatPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    userModel.name ?? "Unknown",
+                    widget.userModel.name ?? "Unknown",
                     style: Theme.of(context).textTheme.headlineSmall,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    userModel.status ?? "Offline",
-                    style: Theme.of(context).textTheme.labelLarge,
-                    overflow: TextOverflow.ellipsis,
+                  StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                    stream: profileController.db.collection('users').doc(widget.userModel.id).snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text(
+                          "Loading...",
+                          style: Theme.of(context).textTheme.labelLarge,
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Text(
+                          "Error",
+                          style: Theme.of(context).textTheme.labelLarge,
+                        );
+                      }
+                      if (!snapshot.hasData || !snapshot.data!.exists) {
+                        return Text(
+                          "Offline",
+                          style: Theme.of(context).textTheme.labelLarge,
+                        );
+                      }
+                      var userData = snapshot.data!.data() as Map<String, dynamic>;
+                      return Text(
+                        userData['status'] ?? "Offline",
+                        style: Theme.of(context).textTheme.labelLarge,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
                   ),
                 ],
               ),
@@ -102,9 +157,9 @@ class chatPage extends StatelessWidget {
               icon: SvgPicture.asset(AssetsImage.sendSVG),
               onPressed: () {
                 if (messageController.text.trim().isNotEmpty) {
-
-                  chatController.sendMessage(userModel.id!, messageController.text.trim());
+                  chatController.sendMessage(widget.userModel.id!, messageController.text.trim());
                   messageController.clear();
+                  _scrollToBottom();
                 }
               },
             ),
@@ -116,7 +171,7 @@ class chatPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: StreamBuilder<List<ChatModel>>(
-            stream: chatController.getMessages(userModel.id!),
+            stream: chatController.getMessages(widget.userModel.id!),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return const Center(
@@ -132,10 +187,15 @@ class chatPage extends StatelessWidget {
                 );
               } else {
                 final messages = snapshot.data!;
+                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
                 return ListView.builder(
+                  controller: _scrollController,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
+                    if (message.senderId != profileController.currentUser.value.id) {
+                      chatController.updateMessageReadStatus(chatController.getRoomId(widget.userModel.id!), message.id!);
+                    }
                     return SenderChat(
                       sms: message.message,
                       isComing: message.senderId != profileController.currentUser.value.id,
@@ -143,6 +203,10 @@ class chatPage extends StatelessWidget {
                             (e) => e.toString() == 'MessageStatus.${message.readStatus}',
                         orElse: () => MessageStatus.unknown,
                       ),
+                      timestamp: message.timestamp,
+                      index: index,
+                      messageId: message.id!, // Pass the messageId here
+                      senderId: message.senderId!, // Pass the senderId here
                     );
                   },
                 );
