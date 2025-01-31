@@ -157,7 +157,7 @@ class _chatPageState extends State<chatPage> {
               icon: SvgPicture.asset(AssetsImage.sendSVG),
               onPressed: () {
                 if (messageController.text.trim().isNotEmpty) {
-                  chatController.sendMessage(widget.userModel.id!, messageController.text.trim());
+                  chatController.sendMessage(widget.userModel.id!, messageController.text.trim(), widget.userModel);
                   messageController.clear();
                   _scrollToBottom();
                 }

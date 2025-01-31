@@ -17,7 +17,9 @@ class contactTile extends StatelessWidget {
         imageUrl: (user.profileImage?.isEmpty ?? true) ? AssetsImage.defaultPic : user.profileImage!,
         name: user.name ?? "Name",
         lastChat: user.about ?? "hey there",
-        lastSeen: "Online",
+        lastSeen: user.email == dbController.auth.currentUser!.email
+            ?"You"
+            : "online",
       )).toList(),
     ));
   }

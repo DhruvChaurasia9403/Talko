@@ -180,50 +180,39 @@ class _SenderChatState extends State<SenderChat> {
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              widget.sms!,
-                              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: widget.isComing ? Colors.black : Colors.white,
-                              ),
-                            ),
-                            if (widget.timestamp != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
-                                child: Text(
-                                  DateFormat('hh:mm a').format(widget.timestamp!),
-                                  style: Theme.of(context).textTheme.labelSmall,
-                                ),
-                              ),
-                          ],
+                        child: Text(
+                          widget.sms!,
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: widget.isComing ? Colors.black : Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   const SizedBox(height: 1),
                   if (widget.sms != null || (widget.imageUrl != null && widget.imageUrl!.isNotEmpty))
-                    widget.isComing
-                        ? Padding(
-                      padding: const EdgeInsets.only(left: 4.0),
-                    )
-                        : Row(
+                    Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 4.0),
-                        ),
-                        SvgPicture.asset(
-                          widget.status == MessageStatus.read
-                              ? AssetsImage.doubleBlueTickSVG
-                              : widget.status == MessageStatus.delivered
-                              ? AssetsImage.doubleTickSVG
-                              : widget.status == MessageStatus.sent
-                              ? AssetsImage.singleTickSVG
-                              : AssetsImage.errorSVG,
-                          height: 10,
-                          width: 10,
-                        ),
+                        if (widget.timestamp != null)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4.0),
+                            child: Text(
+                              DateFormat('hh:mm a').format(widget.timestamp!),
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
+                        if (!widget.isComing)
+                          SvgPicture.asset(
+                            widget.status == MessageStatus.read
+                                ? AssetsImage.doubleBlueTickSVG
+                                : widget.status == MessageStatus.delivered
+                                ? AssetsImage.doubleTickSVG
+                                : widget.status == MessageStatus.sent
+                                ? AssetsImage.singleTickSVG
+                                : AssetsImage.errorSVG,
+                            height: 10,
+                            width: 10,
+                          ),
                       ],
                     ),
                   const SizedBox(height: 10),
