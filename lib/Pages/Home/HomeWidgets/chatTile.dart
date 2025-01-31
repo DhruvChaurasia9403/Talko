@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:chatting/Model/UserModel.dart';
 
 class chatTile extends StatelessWidget {
-  final UserModel userModel; // Update to use UserModel
+  final UserModel userModel;
   final String imageUrl;
   final String name;
   final String lastChat;
@@ -13,7 +13,7 @@ class chatTile extends StatelessWidget {
 
   const chatTile({
     super.key,
-    required this.userModel, // Update to use UserModel
+    required this.userModel,
     required this.imageUrl,
     required this.name,
     required this.lastChat,
@@ -22,12 +22,11 @@ class chatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("is displaying");
     ChatController contactController = Get.put(ChatController());
     return InkWell(
       onTap: () {
-        Get.to(chatPage(userModel: userModel)); // Pass the userModel
-        String roomId = contactController.getRoomId(userModel.id!); // Use userModel.id
+        Get.to(chatPage(userModel: userModel));
+        String roomId = contactController.getRoomId(userModel.id!);
         print("Room ID: $roomId");
       },
       child: Container(
@@ -56,7 +55,6 @@ class chatTile extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -77,7 +75,12 @@ class chatTile extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(lastSeen),
+              child: Text(
+                lastSeen,
+                style: TextStyle(
+                  color: lastSeen == "online" ? Colors.green : Colors.white,
+                ),
+              ),
             ),
           ],
         ),
