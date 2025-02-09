@@ -1,3 +1,4 @@
+import 'package:chatting/Config/images.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -89,10 +90,16 @@ class ProfileController extends GetxController {
   }
 
   // Update user profile in Firebase
-  Future<void> updateUserProfile({required String imageUrl, required String name, required String about, required String phoneNumber}) async {
+  Future<void> updateUserProfile({
+    required String imageUrl,
+    required String name,
+    required String about,
+    required String phoneNumber,
+  }) async {
     try {
       final userId = auth.currentUser!.uid;
       final previousImageUrl = currentUser.value.profileImage;
+      const defaultImageUrl = AssetsImage.defaultPic; // Replace with your actual default image URL
 
       await db.collection('users').doc(userId).update({
         "profileImage": imageUrl,
@@ -107,14 +114,17 @@ class ProfileController extends GetxController {
       currentUser.value.profileImage = imageUrl;
       currentUser.value.phoneNumber = phoneNumber;
 
-      // Delete the previous image from Cloudinary
-      if (previousImageUrl != null && previousImageUrl.isNotEmpty) {
+      // Delete the previous image from Cloudinary if it's not the default one
+      if (previousImageUrl != null &&
+          previousImageUrl.isNotEmpty &&
+          previousImageUrl != defaultImageUrl) {
         await deleteImageFromCloudinary(previousImageUrl);
       }
     } catch (e) {
       print("Error updating user profile: $e");
     }
   }
+
 
   Future<void> deleteImageFromCloudinary(String imageUrl) async {
     try {

@@ -1,16 +1,15 @@
-import 'package:chatting/Controller/AuthController.dart';
+import 'package:chatting/Config/images.dart';
+import 'package:chatting/Model/UserModel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'Widgets/profileInfo.dart';
 class SenderProfilePage extends StatelessWidget {
-  const SenderProfilePage({super.key});
+  final UserModel userModel;
+  const SenderProfilePage({super.key , required this.userModel});
 
   @override
   Widget build(BuildContext context) {
-    AuthController authController = Get.put(AuthController());
-
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -19,33 +18,18 @@ class SenderProfilePage extends StatelessWidget {
             Get.offAllNamed('/homePage');
           },
         ),
-        actions: [
-          IconButton(
-            onPressed: (){
-              Get.offAllNamed('/updateProfile');
-            },
-            icon: const Icon(Icons.edit)),
-        ],
-        title:const Text("Profile"),
+        title: Text("${userModel.name}'s Profile", style: Theme.of(context).textTheme.headlineSmall),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            const Profileinfo(),
+            Profileinfo(
+              imageUrl: userModel.profileImage ?? AssetsImage.defaultPic,
+              name: userModel.name ?? 'User',
+              email: userModel.email ?? '***@gmail.com',
+            ),
             const Spacer(),
-            ElevatedButton(
-              onPressed: (){
-                authController.logOutUser();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text("Log Out",style: Theme.of(context).textTheme.headlineSmall),
-            )
           ],
         ),
       ),

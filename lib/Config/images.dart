@@ -20,6 +20,5 @@ class AssetsImage{
   //images
   static const boyPic = "$imagePath/boy_sampark_image.png";
   static const girlPic = "$imagePath/girl_sampark_image.png";
-  static const defaultPic = "https://res.cloudinary.com/dgsxsujn9/image/upload/v1735593633/defaultBlue_wxgbq7.webp";
-
+  static const defaultPic = "https://res.cloudinary.com/dgsxsujn9/image/upload/v1739096395/golden_zpizlg.jpg";
 }
