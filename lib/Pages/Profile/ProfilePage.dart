@@ -1,4 +1,5 @@
 
+import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ImagePickerController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Widgets/PrimaryButton.dart';
@@ -14,7 +15,7 @@ class ProfilePage extends StatelessWidget {
     final ProfileController profileController = Get.find<ProfileController>();
     final ImagePickerController imagePickerController = Get.put(ImagePickerController());
     final RxBool isEdit = false.obs;
-    final RxString imagePath = "".obs;
+    final RxString imagePath = AssetsImage.defaultPic.obs;
     final RxBool isLoading = false.obs;
 
     // Function to update the profile image in Firebase

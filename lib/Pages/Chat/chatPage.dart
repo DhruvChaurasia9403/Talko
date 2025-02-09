@@ -4,6 +4,7 @@ import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
 import 'package:chatting/Pages/Chat/Widgets/SenderChat.dart';
+import 'package:chatting/Pages/SenderProfile/senderProfilePage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -65,63 +66,68 @@ class _chatPageState extends State<chatPage> {
           },
           icon: const Icon(Icons.arrow_back_ios_new),
         ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 50,
-              width: 50,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(25),
-                child: Image.network(
-                  widget.userModel.profileImage ?? AssetsImage.defaultPic,
-                  fit: BoxFit.cover,
+        title: InkWell(
+          onTap: () {
+            Get.to(SenderProfilePage(userModel: widget.userModel));
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 50,
+                width: 50,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: Image.network(
+                    widget.userModel.profileImage ?? AssetsImage.defaultPic,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.userModel.name ?? "Unknown",
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                    stream: profileController.db.collection('users').doc(widget.userModel.id).snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
+              const SizedBox(width: 8),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.userModel.name ?? "Unknown",
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      stream: profileController.db.collection('users').doc(widget.userModel.id).snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Text(
+                            "Loading...",
+                            style: Theme.of(context).textTheme.labelLarge,
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return Text(
+                            "Error",
+                            style: Theme.of(context).textTheme.labelLarge,
+                          );
+                        }
+                        if (!snapshot.hasData || !snapshot.data!.exists) {
+                          return Text(
+                            "Offline",
+                            style: Theme.of(context).textTheme.labelLarge,
+                          );
+                        }
+                        var userData = snapshot.data!.data() as Map<String, dynamic>;
                         return Text(
-                          "Loading...",
+                          userData['status'] ?? "Offline",
                           style: Theme.of(context).textTheme.labelLarge,
+                          overflow: TextOverflow.ellipsis,
                         );
-                      }
-                      if (snapshot.hasError) {
-                        return Text(
-                          "Error",
-                          style: Theme.of(context).textTheme.labelLarge,
-                        );
-                      }
-                      if (!snapshot.hasData || !snapshot.data!.exists) {
-                        return Text(
-                          "Offline",
-                          style: Theme.of(context).textTheme.labelLarge,
-                        );
-                      }
-                      var userData = snapshot.data!.data() as Map<String, dynamic>;
-                      return Text(
-                        userData['status'] ?? "Offline",
-                        style: Theme.of(context).textTheme.labelLarge,
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    },
-                  ),
-                ],
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

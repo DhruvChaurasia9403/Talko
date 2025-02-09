@@ -1,3 +1,4 @@
+import 'package:chatting/Config/images.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -70,7 +71,7 @@ class AuthController extends GetxController{
       id: auth.currentUser!.uid,
       name: name,
       email: email,
-      profileImage: "",
+      profileImage: AssetsImage.defaultPic,
       phoneNumber: "",
       // createdAt: DateTime.now().toString(),
     );

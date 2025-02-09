@@ -37,6 +37,7 @@ class ChatController extends GetxController {
     );
 
 
+
     var roomDetails = ChatRoomModel(
       id : roomId,
       lastMessage: message,
@@ -45,6 +46,7 @@ class ChatController extends GetxController {
       timeStamp: DateTime.now(),
       receiver: targetUser,
       unReadMessageNo: 0.toString(),
+      messages: [newChatModel],
     );
 
     try {
