@@ -5,9 +5,10 @@ sealed class ChatEvent {}
 
 class ChatGenerateNewTextMessageEvent extends ChatEvent {
   final String inputMessage;
-  final String? imagePath;
+
   ChatGenerateNewTextMessageEvent({
     required this.inputMessage,
-    this.imagePath,
   });
 }
+
+class ChatClearMessagesEvent extends ChatEvent {}

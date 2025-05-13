@@ -3,6 +3,7 @@ class AssetsImage{
   static const imagePath="assets/Images";
 
 
+
   //logos
   static const appIconSVG = "$iconsPath/sampark_blue_logo.svg";
   static const connectSVG = "$iconsPath/sampark_connect_logo.svg";
@@ -20,5 +21,6 @@ class AssetsImage{
   //images
   static const boyPic = "$imagePath/boy_sampark_image.png";
   static const girlPic = "$imagePath/girl_sampark_image.png";
+  static const aiEarth = "$imagePath/earth.jpg";
   static const defaultPic = "https://res.cloudinary.com/dgsxsujn9/image/upload/v1739096395/golden_zpizlg.jpg";
 }
