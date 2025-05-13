@@ -1,5 +1,9 @@
 // chat_bloc.dart
 import 'dart:async';
+import 'package:bloc/bloc.dart';
+import 'package:chatting/AI/Model/chat_message_model.dart';
+import 'package:chatting/AI/repo/chat_repo.dart';
+import 'package:meta/meta.dart';
 
 part 'chat_event.dart';
 part 'chat_state.dart';

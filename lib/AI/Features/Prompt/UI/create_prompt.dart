@@ -1,8 +1,11 @@
 import 'dart:ui';
-import 'package:artificial_intelegence/Model/chat_message_model.dart';
-import 'package:artificial_intelegence/bloc/chat_bloc.dart';
+import 'package:chatting/AI/Model/chat_message_model.dart';
+import 'package:chatting/AI/bloc/chat_bloc.dart';
+import 'package:chatting/Config/images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get_core/get_core.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:lottie/lottie.dart';
 
 class CreatePromptScreen extends StatefulWidget {
@@ -54,7 +57,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(child: Scaffold(
       body: BlocConsumer<ChatBloc, ChatState>(
         bloc: chatBloc,
         listener: (context, state) {
@@ -73,7 +76,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
                     width: MediaQuery.of(context).size.width,
                     decoration: const BoxDecoration(
                       image: DecorationImage(
-                        image: AssetImage('assets/images/earth.jpg'),
+                        image: AssetImage(AssetsImage.aiEarth),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -118,7 +121,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
                                 margin: const EdgeInsets.only(bottom: 6),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
-                                  color: isUserMessage ? Theme.of(context).primaryColor : Colors.black.withOpacity(0.5),
+                                  color: isUserMessage ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.5),
                                 ),
                                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                                 child: Text(
@@ -156,13 +159,13 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
                                 decoration: InputDecoration(
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                   hintText: "Ask Artificial Intelligence",
-                                  hintStyle: TextStyle(color: Theme.of(context).primaryColor),
+                                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                   fillColor: Colors.black12,
                                   filled: true,
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(50),
-                                    borderSide: BorderSide(color: Theme.of(context).primaryColor),
+                                    borderSide: BorderSide(color: Colors.white),
                                   ),
                                 ),
                               ),
@@ -171,7 +174,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
                             Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Theme.of(context).primaryColor, width: 2),
+                                border: Border.all(color: Colors.white, width: 2),
                               ),
                               child: CircleAvatar(
                                 radius: 24,
@@ -198,6 +201,10 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
           }
         },
       ),
-    );
+    ), onWillPop: () async {
+      // Handle back button press
+      Get.offNamed("/homePage");
+      return true; // Allow the back navigation
+    });
   }
 }

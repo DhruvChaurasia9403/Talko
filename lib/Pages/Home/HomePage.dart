@@ -50,12 +50,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         title: Text(AppStrings.appName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.secondary)),
         bottom: tabBar(tabController, context),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Get.offAllNamed('/contactPage');
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              Get.offAllNamed('/aiPage');
+            },
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            child: const Icon(Icons.smart_toy, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            onPressed: () {
+              Get.offAllNamed('/contactPage');
+            },
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+        ],
       ),
       body: TabBarView(
         controller: tabController,

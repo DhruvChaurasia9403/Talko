@@ -49,6 +49,11 @@ dependencies:
   http:
   uuid:
   intl:
+  bloc:
+  flutter_bloc:
+  dio:
+  lottie:
+  flutter_launcher_icons:
 
 
   crypto: any
@@ -78,6 +83,7 @@ flutter:
   assets:
     - assets/Icons/
     - assets/Images/
+    - assets/loader.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -91,6 +97,9 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
+    - family: Sixtyfour
+      fonts:
+        - asset: assets/Fonts/Sixtyfour-Regular.ttf
     - family: Poppins
       fonts:
         - asset: assets/Fonts/Poppins-Light.ttf

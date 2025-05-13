@@ -1,3 +1,4 @@
+import 'package:chatting/AI/Features/Prompt/UI/create_prompt.dart';
 import 'package:chatting/Pages/Auth/AuthPage.dart';
 import 'package:chatting/Pages/Contact/ContactPage.dart';
 import 'package:chatting/Pages/Home/HomePage.dart';
@@ -14,6 +15,11 @@ var pagePath =[
     name: "/homePage",
     page: ()=>const HomePage(),
     transition: Transition.fadeIn,
+  ),
+  GetPage(
+      name: "/aiPage",
+      page: ()=>const CreatePromptScreen(),
+      transitionDuration: const Duration(milliseconds: 100),
   ),
   // GetPage(
   //   name: "/chatPage",
