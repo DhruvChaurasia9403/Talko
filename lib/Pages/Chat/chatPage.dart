@@ -29,7 +29,7 @@ class _chatPageState extends State<chatPage> {
   @override
   void initState() {
     super.initState();
-    chatController = Get.put(ChatController());
+    chatController = Get.find<ChatController>(); // ✅ Correct
     profileController = Get.put(ProfileController());
   }
 

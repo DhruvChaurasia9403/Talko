@@ -57,154 +57,157 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(child: Scaffold(
-      body: BlocConsumer<ChatBloc, ChatState>(
-        bloc: chatBloc,
-        listener: (context, state) {
-          if (state is ChatSuccessState) {
-            _scrollToBottom(); // Scroll down when a new message arrives
-          }
-        },
-        builder: (context, state) {
-          switch (state.runtimeType) {
-            case ChatSuccessState:
-              List<ChatMessageModel> message = (state as ChatSuccessState).messages;
-              return Stack(
-                children: [
-                  Container(
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(AssetsImage.aiEarth),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: _isKeyboardVisible ? 8.0 : 0.0, sigmaY: _isKeyboardVisible ? 8.0 : 0.0),
-                    child: Container(
-                      color: Colors.black.withOpacity(_isKeyboardVisible ? 0.3 : 0.2),
-                    ),
-                  ),
-                  Column(
-                    children: [
-                      const SizedBox(height: 60),
-                      const Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Text(
-                              "V.O.I.D.",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Sixtyfour'
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: _scrollController, // Attach scroll controller
-                          itemCount: message.length,
-                          itemBuilder: (context, index) {
-                            bool isUserMessage = message[index].role == 'user';
-                            return Align(
-                              alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
-                              child: Container(
-                                constraints: BoxConstraints(
-                                  maxWidth: MediaQuery.of(context).size.width * 0.7,
-                                ),
-                                margin: const EdgeInsets.only(bottom: 6),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  color: isUserMessage ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.5),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                child: Text(
-                                  message[index].parts[0].text,
-                                  style: isUserMessage ? const TextStyle(color: Colors.black) : const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            );
-                          },
+    return WillPopScope(
+      child: Scaffold(
+        body: BlocConsumer<ChatBloc, ChatState>(
+          bloc: chatBloc,
+          listener: (context, state) {
+            if (state is ChatSuccessState) {
+              _scrollToBottom(); // Scroll down when a new message arrives
+            }
+          },
+          builder: (context, state) {
+            switch (state.runtimeType) {
+              case ChatSuccessState:
+                List<ChatMessageModel> message = (state as ChatSuccessState).messages;
+                return Stack(
+                  children: [
+                    Container(
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(AssetsImage.aiEarth),
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      if (chatBloc.generating)
-                        Row(
+                    ),
+                    BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: _isKeyboardVisible ? 8.0 : 0.0, sigmaY: _isKeyboardVisible ? 8.0 : 0.0),
+                      child: Container(
+                        color: Colors.black.withOpacity(_isKeyboardVisible ? 0.3 : 0.2),
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        const SizedBox(height: 60),
+                        const Row(
                           children: [
-                            SizedBox(
-                                height: 100,
-                                width: 100,
-                                child: Lottie.asset('assets/loader.json')),
-                            const SizedBox(width: 20),
-                            const Text("Loading...")
+                            Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                "V.O.I.D.",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Sixtyfour'
+                                ),
+                              ),
+                            )
                           ],
                         ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: textEditingController,
-                                style: const TextStyle(color: Colors.white),
-                                cursorColor: Colors.white,
-                                maxLines: 3,
-                                minLines: 1,
-                                decoration: InputDecoration(
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                  hintText: "Ask Artificial Intelligence",
-                                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                  fillColor: Colors.black12,
-                                  filled: true,
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(50),
-                                    borderSide: BorderSide(color: Colors.white),
+                        Expanded(
+                          child: ListView.builder(
+                            controller: _scrollController, // Attach scroll controller
+                            itemCount: message.length,
+                            itemBuilder: (context, index) {
+                              bool isUserMessage = message[index].role == 'user';
+                              return Align(
+                                alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
+                                child: Container(
+                                  constraints: BoxConstraints(
+                                    maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                  ),
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: isUserMessage ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.5),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                  child: Text(
+                                    message[index].parts[0].text,
+                                    style: isUserMessage ? const TextStyle(color: Colors.black) : const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        if (chatBloc.generating)
+                          Row(
+                            children: [
+                              SizedBox(
+                                  height: 100,
+                                  width: 100,
+                                  child: Lottie.asset('assets/loader.json')),
+                              const SizedBox(width: 20),
+                              const Text("Loading...")
+                            ],
+                          ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: textEditingController,
+                                  style: const TextStyle(color: Colors.white),
+                                  cursorColor: Colors.white,
+                                  maxLines: 3,
+                                  minLines: 1,
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                    hintText: "Ask Artificial Intelligence",
+                                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                    fillColor: Colors.black12,
+                                    filled: true,
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(50),
+                                      borderSide: BorderSide(color: Colors.white),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: CircleAvatar(
-                                radius: 24,
-                                backgroundColor: Colors.transparent,
-                                child: IconButton(
-                                  icon: const Icon(Icons.send, color: Colors.white),
-                                  onPressed: () {
-                                    chatBloc.add(ChatGenerateNewTextMessageEvent(inputMessage: textEditingController.text));
-                                    textEditingController.clear();
-                                    _scrollToBottom(); // Scroll down after sending message
-                                  },
+                              const SizedBox(width: 12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: Colors.transparent,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.send, color: Colors.white),
+                                    onPressed: () {
+                                      chatBloc.add(ChatGenerateNewTextMessageEvent(inputMessage: textEditingController.text));
+                                      textEditingController.clear();
+                                      _scrollToBottom(); // Scroll down after sending message
+                                    },
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            default:
-              return const SizedBox();
-          }
-        },
+                      ],
+                    ),
+                  ],
+                );
+              default:
+                return const SizedBox();
+            }
+          },
+        ),
       ),
-    ), onWillPop: () async {
-      // Handle back button press
-      Get.offNamed("/homePage");
-      return true; // Allow the back navigation
-    });
+      onWillPop: () async {
+        // Navigate to the home page when the back button is pressed
+        Navigator.pushReplacementNamed(context, "/homePage");
+        return false; // Prevent default back navigation
+      },
+    );
   }
 }

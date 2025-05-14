@@ -8,8 +8,8 @@ plugins {
 
 android {
     namespace = "com.example.chatting"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdkVersion 34
+    ndkVersion "25.1.8937393"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -17,7 +17,8 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "1.8"
+        freeCompilerArgs += ["-Xopt-in=kotlin.RequiresOptIn", "-Xjvm-default=all"]
     }
 
     defaultConfig {
@@ -25,15 +26,22 @@ android {
         applicationId = "com.example.chatting"
         // Update the minSdkVersion to 23 to meet Firebase requirements
         minSdkVersion 23   // Change this line
-        targetSdkVersion flutter.targetSdkVersion
-        versionCode flutter.versionCode
-        versionName flutter.versionName
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
     }
 
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
+            minifyEnabled true  // Enables code shrinking
+            shrinkResources true  // Removes unused resources (must have minifyEnabled)
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig = signingConfigs.debug
+        }
+        debug {
+            minifyEnabled false
+            shrinkResources false  // No shrinking in debug mode
         }
     }
 }
@@ -51,3 +59,5 @@ dependencies {
     // Add Firebase dependencies (adjust based on your requirements)
     implementation 'com.google.firebase:firebase-analytics' // Firebase Analytics
 }
+
+gradle.ext.kotlin_mpp_enable_compatibility_metadata_variant = false
