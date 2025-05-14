@@ -18,6 +18,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  TextEditingController searchController = TextEditingController();
+  String searchQuery = "";
+
   @override
   Widget build(BuildContext context) {
     TabController tabController = TabController(length: 3, vsync: this);
@@ -36,7 +39,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         actions: [
           IconButton(
             onPressed: () {
-              imagePickerController.pickImage();
+              showSearchDialog();
             },
             icon: const Icon(Icons.search),
           ),
@@ -50,35 +53,64 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         title: Text(AppStrings.appName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.secondary)),
         bottom: tabBar(tabController, context),
       ),
-
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () {
-              Get.offAllNamed('/aiPage');
-            },
-            backgroundColor: Theme.of(context).colorScheme.secondary,
-            child: const Icon(Icons.smart_toy, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            onPressed: () {
-              Get.offAllNamed('/contactPage');
-            },
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-        ],
-      ),
+        floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              onPressed: () {
+                Get.offAllNamed('/aiPage');
+              },
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              child: const Icon(Icons.smart_toy, color: Colors.white),
+              tooltip: 'Go to AI page',
+            ),
+            const SizedBox(height: 16),
+            FloatingActionButton(
+              onPressed: () {
+                Get.offAllNamed('/contactPage');
+              },
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+              tooltip: 'Add a new contact',
+            ),
+          ],
+        ),
       body: TabBarView(
         controller: tabController,
-        children: const [
-          contactTile(),
+        children: [
+          contactTile(searchQuery: searchQuery),
           Center(child: Text('Tab 2 Content')),
           Center(child: Text('Tab 3 Content')),
         ],
       ),
+    );
+  }
+
+  void showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Search"),
+          content: TextField(
+            controller: searchController,
+            decoration: const InputDecoration(hintText: "Search by name"),
+            onChanged: (query) {
+              setState(() {
+                searchQuery = query;
+              });
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

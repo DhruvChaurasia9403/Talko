@@ -1,3 +1,4 @@
+import 'package:chatting/Controller/NotificationController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Model/ChatModel.dart';
 import 'package:chatting/Model/ChatRoomModel.dart';
@@ -12,7 +13,10 @@ class ChatController extends GetxController {
   final db = FirebaseFirestore.instance;
   RxBool isLoading = false.obs;
   var uuid = const Uuid();
+  final NotificationController notificationController;
   ProfileController profileController = Get.put(ProfileController());
+
+  ChatController(this.notificationController);
 
   String getRoomId(String targetUserId) {
     String currentUserId = auth.currentUser!.uid;
@@ -23,7 +27,7 @@ class ChatController extends GetxController {
     }
   }
 
-  Future<void> sendMessage(String targetUserId, String message ,UserModel targetUser) async {
+  Future<void> sendMessage(String targetUserId, String message, UserModel targetUser) async {
     isLoading.value = true;
     String chatId = uuid.v4();
     String roomId = getRoomId(targetUserId);
@@ -36,10 +40,8 @@ class ChatController extends GetxController {
       readStatus: 'sent',
     );
 
-
-
     var roomDetails = ChatRoomModel(
-      id : roomId,
+      id: roomId,
       lastMessage: message,
       sender: profileController.currentUser.value,
       lastMessageTimeStamp: DateTime.now(),
@@ -52,6 +54,12 @@ class ChatController extends GetxController {
     try {
       await db.collection("chats").doc(roomId).set(roomDetails.toJson());
       await db.collection("chats").doc(roomId).collection("messages").doc(chatId).set(newChatModel.toJson());
+
+      // Trigger notification for the receiver
+      await notificationController.showInstantNotification(
+        title: "New Message from ${profileController.currentUser.value.name}",
+        body: message,
+      );
     } catch (ex) {
       print(ex);
     }

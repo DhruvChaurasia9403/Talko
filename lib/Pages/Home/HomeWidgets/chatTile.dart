@@ -22,7 +22,7 @@ class chatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ChatController contactController = Get.put(ChatController());
+    ChatController contactController = Get.find<ChatController>();
     return InkWell(
       onTap: () {
         Get.to(chatPage(userModel: userModel));

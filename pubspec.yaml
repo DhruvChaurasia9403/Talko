@@ -54,6 +54,17 @@ dependencies:
   dio:
   lottie:
   flutter_launcher_icons:
+  google_sign_in:
+  timezone:
+  flutter_local_notifications:
+  android_intent_plus:
+  permission_handler: ^11.4.0
+
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/Icons/chatLogo.png"
 
 
   crypto: any
