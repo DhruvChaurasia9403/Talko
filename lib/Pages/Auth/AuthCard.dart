@@ -1,3 +1,5 @@
+// File: Pages/Auth/AuthCard.dart
+
 import 'package:chatting/Pages/Auth/LoginForm.dart';
 import 'package:chatting/Pages/Auth/SignUpForm.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +37,7 @@ class AuthCard extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(
-                            "Login",
+                            'login'.tr, // <-- Changed
                             style: isLogin.value
                                 ? Theme.of(context).textTheme.bodyLarge
                                 : Theme.of(context).textTheme.labelLarge,
@@ -60,7 +62,7 @@ class AuthCard extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(
-                            "Sign Up",
+                            'signUp'.tr, // <-- Changed
                             style: isLogin.value
                                 ? Theme.of(context).textTheme.labelLarge
                                 : Theme.of(context).textTheme.bodyLarge,
@@ -81,7 +83,7 @@ class AuthCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20), // Add space between tabs and forms
+              const SizedBox(height: 20),
               Obx(
                     () => isLogin.value
                     ? AuthLoginForm()

@@ -1,7 +1,10 @@
-import 'package:chatting/Config/Strings.dart';
+// File: Pages/Welcome/WelcomeBody.dart
+
 import 'package:chatting/Config/images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart'; // <-- Import Get
+
 class Welcomebody extends StatelessWidget {
   const Welcomebody({super.key});
 
@@ -18,12 +21,23 @@ class Welcomebody extends StatelessWidget {
           ],
         ),
         const SizedBox(height:30),
-        Text(WelcomePageString.nowYouAre,style:Theme.of(context).textTheme.headlineMedium),
-        Text(WelcomePageString.connected,style:Theme.of(context).textTheme.headlineLarge?.copyWith(color:Theme.of(context).colorScheme.secondary)),
+        Text(
+            'welcomeNowYouAre'.tr, // <-- Changed
+            style:Theme.of(context).textTheme.headlineMedium
+        ),
+        Text(
+            'welcomeConnected'.tr, // <-- Changed
+            style:Theme.of(context).textTheme.headlineLarge?.copyWith(
+                color:Theme.of(context).colorScheme.secondary
+            )
+        ),
         const SizedBox(height:10),
-        Text(WelcomePageString.descriptions,textAlign: TextAlign.center,style:Theme.of(context).textTheme.labelLarge),
+        Text(
+            'welcomeDescription'.tr, // <-- Changed
+            textAlign: TextAlign.center,
+            style:Theme.of(context).textTheme.labelLarge
+        ),
       ],
     );
   }
 }
-

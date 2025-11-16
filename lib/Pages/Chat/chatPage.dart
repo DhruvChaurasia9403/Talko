@@ -1,3 +1,5 @@
+// File: Pages/Chat/chatPage.dart
+
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ChatController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
@@ -11,6 +13,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../Model/ChatModel.dart';
+import '../../Model/ChatRoomModel.dart';
 
 class chatPage extends StatefulWidget {
   final UserModel userModel;
@@ -29,8 +32,34 @@ class _chatPageState extends State<chatPage> {
   @override
   void initState() {
     super.initState();
-    chatController = Get.find<ChatController>(); // ✅ Correct
+    chatController = Get.find<ChatController>();
     profileController = Get.put(ProfileController());
+    _resetUnreadCount();
+  }
+  Future<void> _resetUnreadCount() async {
+    try {
+      String roomId = chatController.getRoomId(widget.userModel.id!);
+      final roomRef = profileController.db.collection("chats").doc(roomId);
+      final doc = await roomRef.get();
+
+      if (doc.exists) {
+        ChatRoomModel room = ChatRoomModel.fromJson(doc.data()!);
+
+        // This is the important logic:
+        // We only reset the count if the *current user* is the one
+        // who received the last message.
+        if (room.receiver?.id == profileController.auth.currentUser!.uid) {
+          await roomRef.update({'unReadMessageNo': '0'});
+          print("Unread count reset to 0.");
+        } else {
+          // This is normal. It just means the current user was the *sender*
+          // of the last message, so there was no count for them to reset.
+          print("No unread count to reset for this user.");
+        }
+      }
+    } catch (e) {
+      print("Error in _resetUnreadCount: $e");
+    }
   }
 
   void _scrollToBottom() {
@@ -90,7 +119,7 @@ class _chatPageState extends State<chatPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.userModel.name ?? "Unknown",
+                      widget.userModel.name ?? 'chatUnknownUser'.tr, // <-- Changed
                       style: Theme.of(context).textTheme.headlineSmall,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -99,25 +128,25 @@ class _chatPageState extends State<chatPage> {
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return Text(
-                            "Loading...",
+                            'chatLoading'.tr, // <-- Changed
                             style: Theme.of(context).textTheme.labelLarge,
                           );
                         }
                         if (snapshot.hasError) {
                           return Text(
-                            "Error",
+                            'chatError'.tr, // <-- Changed
                             style: Theme.of(context).textTheme.labelLarge,
                           );
                         }
                         if (!snapshot.hasData || !snapshot.data!.exists) {
                           return Text(
-                            "Offline",
+                            'chatOffline'.tr, // <-- Changed
                             style: Theme.of(context).textTheme.labelLarge,
                           );
                         }
                         var userData = snapshot.data!.data() as Map<String, dynamic>;
                         return Text(
-                          userData['status'] ?? "Offline",
+                          userData['status'] ?? 'chatOffline'.tr, // <-- Changed
                           style: Theme.of(context).textTheme.labelLarge,
                           overflow: TextOverflow.ellipsis,
                         );
@@ -148,9 +177,9 @@ class _chatPageState extends State<chatPage> {
             Expanded(
               child: TextField(
                 controller: messageController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   filled: false,
-                  hintText: "Type message ...",
+                  hintText: 'chatTypeMessage'.tr, // <-- Changed
                   border: InputBorder.none,
                 ),
               ),
@@ -180,16 +209,16 @@ class _chatPageState extends State<chatPage> {
             stream: chatController.getMessages(widget.userModel.id!),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const Center(
-                  child: Text("An error occurred. Please try again."),
+                return Center(
+                  child: Text('chatErrorOccurred'.tr), // <-- Changed
                 );
               } else if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
               } else if (snapshot.data == null || snapshot.data!.isEmpty) {
-                return const Center(
-                  child: Text("No messages found."),
+                return Center(
+                  child: Text('chatNoMessages'.tr), // <-- Changed
                 );
               } else {
                 final messages = snapshot.data!;
@@ -211,8 +240,8 @@ class _chatPageState extends State<chatPage> {
                       ),
                       timestamp: message.timestamp,
                       index: index,
-                      messageId: message.id!, // Pass the messageId here
-                      senderId: message.senderId!, // Pass the senderId here
+                      messageId: message.id!,
+                      senderId: message.senderId!,
                     );
                   },
                 );

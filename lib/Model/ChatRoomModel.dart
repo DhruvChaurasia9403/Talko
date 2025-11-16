@@ -1,10 +1,8 @@
 import 'dart:convert';
-
 import 'package:chatting/Model/ChatModel.dart';
 import 'package:chatting/Model/UserModel.dart';
 
 ChatRoomModel chatRoomModelFromJson(String str) => ChatRoomModel.fromJson(json.decode(str));
-
 String chatRoomModelToJson(ChatRoomModel data) => json.encode(data.toJson());
 
 class ChatRoomModel {
@@ -16,6 +14,7 @@ class ChatRoomModel {
   String? lastMessage;
   DateTime? lastMessageTimeStamp;
   DateTime? timeStamp;
+  List<String>? participants; // <-- ADD THIS LINE
 
   ChatRoomModel({
     this.id,
@@ -26,6 +25,7 @@ class ChatRoomModel {
     this.lastMessage,
     this.lastMessageTimeStamp,
     this.timeStamp,
+    this.participants, // <-- ADD THIS LINE
   });
 
   factory ChatRoomModel.fromJson(Map<String, dynamic> json) => ChatRoomModel(
@@ -43,6 +43,9 @@ class ChatRoomModel {
     timeStamp: json["timeStamp"] != null
         ? DateTime.parse(json["timeStamp"])
         : null,
+    participants: json["participants"] != null // <-- ADD THIS BLOCK
+        ? List<String>.from(json["participants"].map((x) => x))
+        : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -54,5 +57,8 @@ class ChatRoomModel {
     "lastMessage": lastMessage,
     "lastMessageTimeStamp": lastMessageTimeStamp?.toIso8601String(),
     "timeStamp": timeStamp?.toIso8601String(),
+    "participants": participants != null // <-- ADD THIS LINE
+        ? List<dynamic>.from(participants!.map((x) => x))
+        : null,
   };
 }

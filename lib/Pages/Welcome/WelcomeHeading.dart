@@ -1,7 +1,10 @@
-import 'package:chatting/Config/Strings.dart';
+// File: Pages/Welcome/WelcomeHeading.dart
+
 import 'package:chatting/Config/images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart'; // <-- Import Get
+
 class welcomeHeading extends StatelessWidget {
   const welcomeHeading({super.key});
 
@@ -14,11 +17,16 @@ class welcomeHeading extends StatelessWidget {
           children:[
             SvgPicture.asset(
                 AssetsImage.appIconSVG
-            ), 
+            ),
           ],
         ),
         const SizedBox(height : 20),
-        Text(AppStrings.appName,style:Theme.of(context).textTheme.headlineLarge?.copyWith(color:Theme.of(context).colorScheme.secondary)),
+        Text(
+          'appName'.tr, // <-- Changed
+          style:Theme.of(context).textTheme.headlineLarge?.copyWith(
+              color:Theme.of(context).colorScheme.secondary
+          ),
+        ),
       ],
     );
   }

@@ -1,12 +1,4 @@
-// To parse this JSON data, do
-//
-//     final userModel = userModelFromJson(jsonString);
-
-import 'dart:convert';
-
-UserModel userModelFromJson(String str) => UserModel.fromJson(json.decode(str));
-
-String userModelToJson(UserModel data) => json.encode(data.toJson());
+// ... (imports)
 
 class UserModel {
   String? id;
@@ -16,8 +8,7 @@ class UserModel {
   String? phoneNumber;
   String? about;
   String? status;
-  // DateTime? lastSeen; // Add the lastSeen field
-  // DateTime? accountCreated; // Add the accountCreated field
+  String? fcmToken; // <-- ADD THIS LINE
 
   UserModel({
     this.id,
@@ -27,8 +18,7 @@ class UserModel {
     this.phoneNumber,
     this.about,
     this.status,
-    // this.lastSeen,
-    // this.accountCreated,
+    this.fcmToken, // <-- ADD THIS LINE
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -39,8 +29,7 @@ class UserModel {
     phoneNumber: json["phoneNumber"],
     about: json["about"],
     status: json["status"],
-    // lastSeen: json["lastSeen"] != null ? DateTime.parse(json["lastSeen"]) : null,
-    // accountCreated: json["accountCreated"] != null ? DateTime.parse(json["accountCreated"]) : null,
+    fcmToken: json["fcmToken"], // <-- ADD THIS LINE
   );
 
   Map<String, dynamic> toJson() => {
@@ -51,7 +40,6 @@ class UserModel {
     "phoneNumber": phoneNumber,
     "about": about,
     "status": status,
-    // "lastSeen": lastSeen?.toIso8601String(),
-    // "accountCreated": accountCreated?.toIso8601String(),
+    "fcmToken": fcmToken, // <-- ADD THIS LINE
   };
 }

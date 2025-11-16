@@ -1,3 +1,5 @@
+// File: Pages/SenderProfile/senderProfilePage.dart
+
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +20,13 @@ class SenderProfilePage extends StatelessWidget {
             Get.offAllNamed('/homePage');
           },
         ),
-        title: Text("${userModel.name}'s Profile", style: Theme.of(context).textTheme.headlineSmall),
+        // Using trParams for dynamic profile title
+        title: Text(
+            'profileSenderTitle'.trParams({ // <-- Changed
+              'name': userModel.name ?? 'profileSenderDefaultUser'.tr
+            }),
+            style: Theme.of(context).textTheme.headlineSmall
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -26,8 +34,8 @@ class SenderProfilePage extends StatelessWidget {
           children: [
             Profileinfo(
               imageUrl: userModel.profileImage ?? AssetsImage.defaultPic,
-              name: userModel.name ?? 'User',
-              email: userModel.email ?? '***@gmail.com',
+              name: userModel.name ?? 'profileSenderDefaultUser'.tr, // <-- Changed
+              email: userModel.email ?? 'profileSenderDefaultEmail'.tr, // <-- Changed
             ),
             const Spacer(),
           ],

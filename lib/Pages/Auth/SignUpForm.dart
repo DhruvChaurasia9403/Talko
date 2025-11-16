@@ -1,3 +1,5 @@
+// File: Pages/Auth/SignUpForm.dart
+
 import 'package:chatting/Controller/AuthController.dart';
 import 'package:chatting/Widgets/PrimaryButton.dart';
 import'package:flutter/material.dart';
@@ -21,9 +23,9 @@ class AuthSignUpForm extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
-            controller: name,
+              controller: name,
               decoration:InputDecoration(
-                hintText: "Name",
+                hintText: 'name'.tr, // <-- Changed
                 hintStyle: Theme.of(context).textTheme.labelLarge,
                 prefixIcon: Icon(Icons.person_outline,color: Theme.of(context).colorScheme.onPrimaryContainer),
               )
@@ -33,9 +35,9 @@ class AuthSignUpForm extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
-            controller: email,
+              controller: email,
               decoration:InputDecoration(
-                hintText: "Email",
+                hintText: 'email'.tr, // <-- Changed
                 hintStyle: Theme.of(context).textTheme.labelLarge,
                 prefixIcon: Icon(Icons.alternate_email_outlined,color: Theme.of(context).colorScheme.onPrimaryContainer),
               )
@@ -45,10 +47,10 @@ class AuthSignUpForm extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
-            obscureText: true,
-            controller: password,
+              obscureText: true,
+              controller: password,
               decoration:InputDecoration(
-                hintText: "Password",
+                hintText: 'password'.tr, // <-- Changed
                 hintStyle: Theme.of(context).textTheme.labelLarge,
                 prefixIcon: Icon(Icons.password,color: Theme.of(context).colorScheme.onPrimaryContainer),
               )
@@ -61,7 +63,7 @@ class AuthSignUpForm extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Primarybutton(
-                btnName:"SignUp",
+                btnName: 'signUp'.tr, // <-- Changed
                 icon:Icons.lock,
                 onTap:(){
                   authController.createUser(email.text, password.text,name.text);

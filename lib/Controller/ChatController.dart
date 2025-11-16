@@ -1,3 +1,5 @@
+// File: Controller/ChatController.dart
+
 import 'package:chatting/Controller/NotificationController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Model/ChatModel.dart';
@@ -7,6 +9,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http; // <-- ADD THIS
+import 'dart:convert'; // <-- ADD THIS
 
 class ChatController extends GetxController {
   final auth = FirebaseAuth.instance;
@@ -17,6 +21,35 @@ class ChatController extends GetxController {
   ProfileController profileController = Get.put(ProfileController());
 
   ChatController(this.notificationController);
+
+  // --- ADD THIS NEW FUNCTION ---
+  Future<void> _sendNotificationToServer(String receiverId, String message) async {
+    // !!! REPLACE THIS WITH YOUR ACTUAL RENDER URL !!!
+    final url = Uri.parse("https://chatting-server.onrender.com/sendNotification");
+
+    final senderName = profileController.currentUser.value.name ?? "Someone";
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'receiverId': receiverId,
+
+          'senderName': senderName,
+          'messageText': message,
+        }),
+      );
+      if (response.statusCode == 200) {
+        print("Notification server request successful.");
+      } else {
+        print("Notification server request failed: ${response.body}");
+      }
+    } catch (e) {
+      print("Error calling notification server: $e");
+    }
+  }
+  // --- END OF NEW FUNCTION ---
 
   String getRoomId(String targetUserId) {
     String currentUserId = auth.currentUser!.uid;
@@ -40,6 +73,20 @@ class ChatController extends GetxController {
       readStatus: 'sent',
     );
 
+    final roomRef = db.collection("chats").doc(roomId);
+    final doc = await roomRef.get();
+
+    int newUnreadCount = 1;
+    if (doc.exists) {
+      try {
+        ChatRoomModel oldRoom = ChatRoomModel.fromJson(doc.data()!);
+        int oldCount = int.tryParse(oldRoom.unReadMessageNo ?? '0') ?? 0;
+        newUnreadCount = oldCount + 1;
+      } catch (e) {
+        print("Error parsing old room, resetting count: $e");
+      }
+    }
+
     var roomDetails = ChatRoomModel(
       id: roomId,
       lastMessage: message,
@@ -47,19 +94,20 @@ class ChatController extends GetxController {
       lastMessageTimeStamp: DateTime.now(),
       timeStamp: DateTime.now(),
       receiver: targetUser,
-      unReadMessageNo: 0.toString(),
+      unReadMessageNo: newUnreadCount.toString(),
       messages: [newChatModel],
+      participants: [auth.currentUser!.uid, targetUserId],
     );
 
     try {
-      await db.collection("chats").doc(roomId).set(roomDetails.toJson());
-      await db.collection("chats").doc(roomId).collection("messages").doc(chatId).set(newChatModel.toJson());
+      await roomRef.set(roomDetails.toJson());
+      await roomRef.collection("messages").doc(chatId).set(newChatModel.toJson());
 
-      // Trigger notification for the receiver
-      await notificationController.showInstantNotification(
-        title: "New Message from ${profileController.currentUser.value.name}",
-        body: message,
-      );
+      // --- UPDATE THIS ---
+      // This call now happens *after* the message is saved
+      await _sendNotificationToServer(targetUserId, message);
+      // -------------------
+
     } catch (ex) {
       print(ex);
     }
