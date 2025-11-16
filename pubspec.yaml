@@ -59,6 +59,9 @@ dependencies:
   flutter_local_notifications:
   android_intent_plus:
   permission_handler: ^11.4.0
+  firebase_messaging:
+  firebase_app_check:
+
 
 
 flutter_launcher_icons:

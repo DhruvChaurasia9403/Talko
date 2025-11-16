@@ -1,4 +1,8 @@
+// File: Pages/Home/HomeWidgets/tabBar.dart
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart'; // <-- Import Get
+
 tabBar(TabController tabController,BuildContext context){
   return PreferredSize(
     preferredSize: const Size.fromHeight(60),
@@ -9,18 +13,18 @@ tabBar(TabController tabController,BuildContext context){
       indicatorColor: Theme.of(context).colorScheme.primary,
       indicatorSize: TabBarIndicatorSize.label,
       indicator: BoxDecoration(
-        borderRadius: BorderRadius.circular(100)
+          borderRadius: BorderRadius.circular(100)
       ),
       controller: tabController,
-      tabs: const [
+      tabs: [
         Tab(
-          text: "Chats",
+          text: 'homeChats'.tr, // <-- Changed
         ),
         Tab(
-          text: "Group",
+          text: 'homeGroup'.tr, // <-- Changed
         ),
         Tab(
-          text: "Calls",
+          text: 'homeCalls'.tr, // <-- Changed
         )
       ],
     ),

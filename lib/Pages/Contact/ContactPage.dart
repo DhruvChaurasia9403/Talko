@@ -1,11 +1,13 @@
-import 'package:chatting/Controller/ContactsController.dart';
+// File: Pages/Contact/ContactPage.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chatting/Config/Strings.dart';
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Pages/Contact/Widgets/ContactSearch.dart';
 import 'package:chatting/Pages/Contact/Widgets/NewContactTile.dart';
 import 'package:chatting/Pages/Home/HomeWidgets/chatTile.dart';
+
+import '../../Controller/allUsersController.dart';
 
 class Contactpage extends StatelessWidget {
   const Contactpage({super.key});
@@ -13,7 +15,8 @@ class Contactpage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     RxBool isSearchEnable = false.obs;
-    Contactscontroller contactscontroller = Get.put(Contactscontroller());
+    // Use the new controller
+    AllUsersController allUsersController = Get.put(AllUsersController()); // <-- CHANGED
 
     return WillPopScope(
       onWillPop: () async {
@@ -28,7 +31,7 @@ class Contactpage extends StatelessWidget {
               Get.offNamed("/homePage");
             },
           ),
-          title: const Text("Select Contact"),
+          title: Text('contactSelect'.tr),
           actions: [
             Obx(() => IconButton(
               icon: isSearchEnable.value
@@ -49,34 +52,41 @@ class Contactpage extends StatelessWidget {
                   : const SizedBox(height: 2)),
               const SizedBox(height: 6),
               NewContactTile(
-                btnName: "New Contact",
+                btnName: 'contactNew'.tr,
                 icon: Icons.person_add,
                 onTap: () {},
               ),
               const SizedBox(height: 6),
               NewContactTile(
-                btnName: "New Group",
+                btnName: 'contactNewGroup'.tr,
                 icon: Icons.group_add,
                 onTap: () {},
               ),
               const SizedBox(height: 6),
               Padding(
                 padding: const EdgeInsets.all(4.0),
-                child: Text("Contacts on ${AppStrings.appName}",
+                child: Text(
+                    'contactOnApp'.trParams({'appName': 'appName'.tr}),
                     style: Theme.of(context).textTheme.labelLarge),
               ),
-              Obx(()=>Column(
-                children: contactscontroller.userList.map((e)=> chatTile(
-                  userModel: e,
-                  imageUrl: (e.profileImage?.isEmpty ?? true) ? AssetsImage.defaultPic : e.profileImage!,
-                  name: e.name??"Name",
-                  lastChat: e.about??"hey there",
-                  lastSeen: e.email == contactscontroller.auth.currentUser!.email
-                      ?"you"
-                      :"online",
-                )).toList(),
-              ),
-              )
+              Obx(() {
+                if (allUsersController.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                // Use the userList from the new controller
+                return Column(
+                  children: allUsersController.userList.map((e) => chatTile( // <-- CHANGED
+                    userModel: e,
+                    imageUrl: (e.profileImage?.isEmpty ?? true)
+                        ? AssetsImage.defaultPic
+                        : e.profileImage!,
+                    name: e.name ?? 'contactDefaultName'.tr,
+                    lastChat: e.about ?? 'contactDefaultAbout'.tr,
+                    lastSeen: e.status ?? 'contactOnline'.tr, // Show user status
+                    // No unreadCount is passed, so it will be null (correct)
+                  )).toList(),
+                );
+              })
             ],
           ),
         ),

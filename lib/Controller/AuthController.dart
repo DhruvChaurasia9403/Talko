@@ -1,12 +1,16 @@
+// File: Controller/AuthController.dart
+
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
 
 class AuthController extends GetxController{
   final auth = FirebaseAuth.instance;
   final db = FirebaseFirestore.instance;
+  final fcm = FirebaseMessaging.instance;
   RxBool isLoading = false.obs;
 
 
@@ -19,21 +23,22 @@ class AuthController extends GetxController{
         password: password,
       );
       Get.offAllNamed('/homePage');
-      print("Login  Sucessfull");
+      print('authLoginSuccess'.tr); // <-- Changed (for debug)
     }on FirebaseAuthException catch(e){
       if(e.code == 'user-not-found'){
-        print('TNo user found for that email.');
+        // You can show a snackbar here
+        print('authLoginUserNotFound'.tr); // <-- Changed
       }
       else if(e.code == 'wrong-password'){
-        print('Wrong password provider for that user.');
+        print('authLoginWrongPassword'.tr); // <-- Changed
       }
     }catch(e){
       print(e);
     }
     isLoading.value=false;
   }
-  
-  
+
+
   Future <void> createUser(String email,String password,String name)async{
     isLoading.value = true;
     try{
@@ -43,13 +48,13 @@ class AuthController extends GetxController{
       );
       await initUser(email,name);
       Get.offAllNamed('/homePage');
-      print("Sucessfully!! created account ");
+      print('authSignUpSuccess'.tr); // <-- Changed
     }on FirebaseAuthException catch(e){
       if(e.code=='weak-password'){
-        print('The password provided is too weak');
+        print('authSignUpWeakPassword'.tr); // <-- Changed
       }
       else if(e.code=='email-already-in-use'){
-        print('The account already exists for that email');
+        print('authSignUpEmailInUse'.tr); // <-- Changed
       }
     }catch(e){
       print(e);
@@ -67,13 +72,24 @@ class AuthController extends GetxController{
 
 
   Future<void> initUser(String email,String name) async {
+    // --- Get FCM Token ---
+    String? token;
+    try {
+      await fcm.requestPermission(); // Request permission
+      token = await fcm.getToken();
+      print("My FCM Token: $token");
+    } catch (e) {
+      print("Error getting FCM token: $e");
+    }
+    // ---------------------
+
     var newUser = UserModel(
       id: auth.currentUser!.uid,
       name: name,
       email: email,
       profileImage: AssetsImage.defaultPic,
       phoneNumber: "",
-      // createdAt: DateTime.now().toString(),
+      fcmToken: token, // <-- Save the token here
     );
     try{
       await db.collection("users").doc(auth.currentUser!.uid).set(newUser.toJson());

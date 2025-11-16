@@ -1,3 +1,5 @@
+// File: Pages/SenderProfile/Widgets/profileInfo.dart
+
 import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Pages/Chat/chatPage.dart';
 import 'package:flutter/material.dart';
@@ -32,13 +34,13 @@ class Profileinfo extends StatelessWidget {
               imageUrl,
               width: double.infinity,
               height: 400,
-              fit: BoxFit.cover, // Ensures the image covers the area
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-              name,
-              style: Theme.of(context).textTheme.bodyLarge,
+            name,
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 10),
           Text(email, style: Theme.of(context).textTheme.labelLarge),
@@ -58,7 +60,7 @@ class Profileinfo extends StatelessWidget {
                     children: [
                       Icon(Icons.phone, color: Theme.of(context).colorScheme.secondary),
                       const SizedBox(width: 10),
-                      Text("Call", style: Theme.of(context).textTheme.labelLarge),
+                      Text('profileInfoCall'.tr, style: Theme.of(context).textTheme.labelLarge), // <-- Changed
                     ],
                   ),
                 ),
@@ -72,7 +74,7 @@ class Profileinfo extends StatelessWidget {
                     children: [
                       Icon(Icons.videocam, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 10),
-                      Text("Video", style: Theme.of(context).textTheme.labelLarge),
+                      Text('profileInfoVideo'.tr, style: Theme.of(context).textTheme.labelLarge), // <-- Changed
                     ],
                   ),
                 ),
@@ -90,7 +92,7 @@ class Profileinfo extends StatelessWidget {
                       children: [
                         const Icon(Icons.chat),
                         const SizedBox(width: 10),
-                        Text("Chat", style: Theme.of(context).textTheme.labelLarge),
+                        Text('profileInfoChat'.tr, style: Theme.of(context).textTheme.labelLarge), // <-- Changed
                       ],
                     ),
                   ),

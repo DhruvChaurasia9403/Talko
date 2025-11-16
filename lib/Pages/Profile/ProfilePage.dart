@@ -1,3 +1,4 @@
+// File: Pages/Profile/ProfilePage.dart
 
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ImagePickerController.dart';
@@ -18,7 +19,6 @@ class ProfilePage extends StatelessWidget {
     final RxString imagePath = AssetsImage.defaultPic.obs;
     final RxBool isLoading = false.obs;
 
-    // Function to update the profile image in Firebase
     Future<void> updateProfileImageInFirebase(String imageUrl) async {
       try {
         final String userId = profileController.currentUser.value.id ?? "";
@@ -39,16 +39,16 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Profile",
+          'profile'.tr, // <-- Changed
           style: Theme.of(context).textTheme.labelLarge,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed:(){
-              Get.offAllNamed('/authPage');
-              profileController.signOut();
-            }
+              icon: const Icon(Icons.logout),
+              onPressed:(){
+                Get.offAllNamed('/authPage');
+                profileController.signOut();
+              }
           )
         ],
         leading: IconButton(
@@ -152,7 +152,7 @@ class ProfilePage extends StatelessWidget {
                               style: Theme.of(context).textTheme.headlineSmall,
                               enabled: isEdit.value,
                               decoration: InputDecoration(
-                                labelText: "Name",
+                                labelText: 'name'.tr, // <-- Changed
                                 filled: isEdit.value,
                                 prefixIcon: const Icon(Icons.person, color: Colors.white60),
                               ),
@@ -167,7 +167,7 @@ class ProfilePage extends StatelessWidget {
                               style: Theme.of(context).textTheme.headlineSmall,
                               enabled: isEdit.value,
                               decoration: InputDecoration(
-                                labelText: "About",
+                                labelText: 'profileAbout'.tr, // <-- Changed
                                 filled: isEdit.value,
                                 prefixIcon: const Icon(Icons.info, color: Colors.white60),
                               ),
@@ -180,7 +180,7 @@ class ProfilePage extends StatelessWidget {
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white60),
                             enabled: false,
                             decoration: InputDecoration(
-                              labelText: "Email",
+                              labelText: 'email'.tr, // <-- Changed
                               fillColor: Theme.of(context).colorScheme.primaryContainer,
                               prefixIcon: const Icon(Icons.alternate_email, color: Colors.white60),
                             ),
@@ -194,7 +194,7 @@ class ProfilePage extends StatelessWidget {
                               style: Theme.of(context).textTheme.headlineSmall,
                               enabled: isEdit.value,
                               decoration: InputDecoration(
-                                labelText: "Phone Number",
+                                labelText: 'profilePhoneNumber'.tr, // <-- Changed
                                 filled: isEdit.value,
                                 prefixIcon: const Icon(Icons.phone, color: Colors.white60),
                               ),
@@ -208,7 +208,7 @@ class ProfilePage extends StatelessWidget {
                             children: [
                               isEdit.value
                                   ? Primarybutton(
-                                btnName: "Save",
+                                btnName: 'profileSave'.tr, // <-- Changed
                                 icon: Icons.save,
                                 onTap: () async {
                                   isLoading.value = true;
@@ -229,7 +229,7 @@ class ProfilePage extends StatelessWidget {
                                 },
                               )
                                   : Primarybutton(
-                                btnName: "Edit",
+                                btnName: 'profileEdit'.tr, // <-- Changed
                                 icon: Icons.edit,
                                 onTap: () {
                                   isEdit.value = true;

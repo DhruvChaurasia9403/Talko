@@ -1,4 +1,5 @@
-import 'package:chatting/Config/Strings.dart';
+// File: Pages/Home/HomePage.dart
+
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ImagePickerController.dart';
 import 'package:chatting/Pages/Home/HomeWidgets/contactTile.dart';
@@ -8,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../Controller/ProfileController.dart';
-import '../../Controller/DBController.dart'; // Import DBController
+import '../../Controller/DBController.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,7 +26,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     TabController tabController = TabController(length: 3, vsync: this);
     Get.put(ProfileController());
-    Get.put(DBcontroller()); // Initialize DBController
+    Get.put(DBcontroller());
 
     ImagePickerController imagePickerController = Get.put(ImagePickerController());
     return Scaffold(
@@ -50,37 +51,42 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             icon: const Icon(Icons.more_vert),
           )
         ],
-        title: Text(AppStrings.appName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.secondary)),
+        title: Text(
+            'appName'.tr, // <-- Changed
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Theme.of(context).colorScheme.secondary
+            )
+        ),
         bottom: tabBar(tabController, context),
       ),
-        floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              onPressed: () {
-                Get.offAllNamed('/aiPage');
-              },
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-              child: const Icon(Icons.smart_toy, color: Colors.white),
-              tooltip: 'Go to AI page',
-            ),
-            const SizedBox(height: 16),
-            FloatingActionButton(
-              onPressed: () {
-                Get.offAllNamed('/contactPage');
-              },
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: const Icon(Icons.add, color: Colors.white),
-              tooltip: 'Add a new contact',
-            ),
-          ],
-        ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              Get.offAllNamed('/aiPage');
+            },
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            child: const Icon(Icons.smart_toy, color: Colors.white),
+            tooltip: 'homeAiTooltip'.tr, // <-- Changed
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            onPressed: () {
+              Get.offAllNamed('/contactPage');
+            },
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            child: const Icon(Icons.add, color: Colors.white),
+            tooltip: 'homeContactTooltip'.tr, // <-- Changed
+          ),
+        ],
+      ),
       body: TabBarView(
         controller: tabController,
         children: [
           contactTile(searchQuery: searchQuery),
-          Center(child: Text('Tab 2 Content')),
-          Center(child: Text('Tab 3 Content')),
+          Center(child: Text('homeTab2'.tr)), // <-- Changed
+          Center(child: Text('homeTab3'.tr)), // <-- Changed
         ],
       ),
     );
@@ -91,10 +97,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Search"),
+          title: Text('homeSearch'.tr), // <-- Changed
           content: TextField(
             controller: searchController,
-            decoration: const InputDecoration(hintText: "Search by name"),
+            decoration: InputDecoration(hintText: 'homeSearchBy'.tr), // <-- Changed
             onChanged: (query) {
               setState(() {
                 searchQuery = query;
@@ -106,7 +112,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('Cancel'),
+              child: Text('homeCancel'.tr), // <-- Changed
             ),
           ],
         );

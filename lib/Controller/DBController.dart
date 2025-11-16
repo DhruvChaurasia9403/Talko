@@ -1,35 +1,41 @@
-import 'package:chatting/Model/UserModel.dart';
+import 'package:chatting/Model/ChatRoomModel.dart'; // <-- Change import
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-
 
 class DBcontroller extends GetxController{
   final db = FirebaseFirestore.instance;
   final auth = FirebaseAuth.instance;
   RxBool isLoading = false.obs;
-  RxList<UserModel> userList = <UserModel>[].obs;
+  // Change userList to chatRoomList
+  RxList<ChatRoomModel> chatRoomList = <ChatRoomModel>[].obs;
 
   @override
-  void onInit() async{
+  void onInit() {
     super.onInit();
-    await getUserLIst();
+    streamChatRooms(); // <-- Call new function
   }
-  Future<void> getUserLIst() async{
+
+  // Replace getUserLIst() with streamChatRooms()
+  void streamChatRooms() {
     isLoading.value = true;
-    try{
-      await db.collection("users").get().then(
-              (value)=> {
-            userList.value = value.docs
-                .map(
-                  (e)=> UserModel.fromJson(e.data())
-            ).toList(),
-          }
-      );
-      print(userList);
-    }catch(ex){
+    try {
+      db.collection("chats")
+          .where("participants", arrayContains: auth.currentUser!.uid) // Query by participants
+          .orderBy("lastMessageTimeStamp", descending: true) // Show newest chats first
+          .snapshots()
+          .listen((snapshot) {
+        chatRoomList.value = snapshot.docs
+            .map((doc) => ChatRoomModel.fromJson(doc.data()))
+            .toList();
+        isLoading.value = false;
+      }, onError: (ex) {
+        print(ex);
+        isLoading.value = false;
+      });
+    } catch (ex) {
       print(ex);
+      isLoading.value = false;
     }
-    isLoading.value = false;
   }
 }

@@ -1,3 +1,5 @@
+// File: Pages/Contact/Widgets/ContactSearch.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -6,14 +8,11 @@ class ContactSearch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    RxBool isFocused = false.obs;  // Observable for focus state
-
-    // FocusNode to manage the focus state
+    RxBool isFocused = false.obs;
     final FocusNode _focusNode = FocusNode();
 
-    // Add a listener to the FocusNode to update isFocused value
     _focusNode.addListener(() {
-      isFocused.value = _focusNode.hasFocus;  // Update focus state
+      isFocused.value = _focusNode.hasFocus;
     });
 
     return Obx(
@@ -32,9 +31,9 @@ class ContactSearch extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 6.0),
           child: TextField(
-            focusNode: _focusNode,  // Assigning the FocusNode
+            focusNode: _focusNode,
             decoration: InputDecoration(
-              hintText: 'Search...',
+              hintText: 'contactSearchHint'.tr, // <-- Changed
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.0),
@@ -46,7 +45,6 @@ class ContactSearch extends StatelessWidget {
                   : Theme.of(context).colorScheme.surface,
             ),
             onTap: () {
-              // Tapping will trigger the focus change but the listener handles the state
             },
           ),
         ),

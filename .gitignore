@@ -42,4 +42,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 # Custom ignored files
-lib/AI/utils/Constants.dart
+/android/app/google-services.json
+/firebase.json
+
