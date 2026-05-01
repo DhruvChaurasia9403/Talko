@@ -1,5 +1,6 @@
 // File: Pages/Home/HomePage.dart
 
+import 'dart:ui';
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ImagePickerController.dart';
 import 'package:chatting/Pages/Home/HomeWidgets/contactTile.dart';
@@ -27,66 +28,79 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     TabController tabController = TabController(length: 3, vsync: this);
     Get.put(ProfileController());
     Get.put(DBcontroller());
+    Get.put(ImagePickerController());
 
-    ImagePickerController imagePickerController = Get.put(ImagePickerController());
     return Scaffold(
-      appBar: AppBar(
-        elevation: 10,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SvgPicture.asset(AssetsImage.appIconSVG),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              showSearchDialog();
-            },
-            icon: const Icon(Icons.search),
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(120),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: AppBar(
+              backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.75),
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: SvgPicture.asset(AssetsImage.appIconSVG),
+              ),
+              actions: [
+                IconButton(
+                  onPressed: () => showSearchDialog(),
+                  icon: const Icon(Icons.search, size: 26),
+                ),
+                IconButton(
+                  onPressed: () => Get.to(() => const ProfilePage()),
+                  icon: const Icon(Icons.more_vert, size: 26),
+                )
+              ],
+              title: Text(
+                  'appName'.tr,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  )
+              ),
+              bottom: tabBar(tabController, context),
+            ),
           ),
-          IconButton(
-            onPressed: () {
-              Get.to(() => const ProfilePage());
-            },
-            icon: const Icon(Icons.more_vert),
-          )
-        ],
-        title: Text(
-            'appName'.tr, // <-- Changed
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Theme.of(context).colorScheme.secondary
-            )
         ),
-        bottom: tabBar(tabController, context),
       ),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            onPressed: () {
-              Get.offAllNamed('/aiPage');
-            },
-            backgroundColor: Theme.of(context).colorScheme.secondary,
-            child: const Icon(Icons.smart_toy, color: Colors.white),
-            tooltip: 'homeAiTooltip'.tr, // <-- Changed
+            heroTag: "ai_fab",
+            onPressed: () => Get.offAllNamed('/aiPage'),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Theme.of(context).colorScheme.secondary.withOpacity(0.5)),
+            ),
+            tooltip: 'homeAiTooltip'.tr,
+            child: Icon(Icons.smart_toy, color: Theme.of(context).colorScheme.secondary),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(
-            onPressed: () {
-              Get.offAllNamed('/contactPage');
-            },
+            heroTag: "contact_fab",
+            onPressed: () => Get.offAllNamed('/contactPage'),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            child: const Icon(Icons.add, color: Colors.white),
-            tooltip: 'homeContactTooltip'.tr, // <-- Changed
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 8,
+            tooltip: 'homeContactTooltip'.tr,
+            child: const Icon(Icons.add, color: Colors.black87, size: 28),
           ),
         ],
       ),
       body: TabBarView(
         controller: tabController,
         children: [
+          // --- FIX: Removed the Padding wrapper here! ---
           contactTile(searchQuery: searchQuery),
-          Center(child: Text('homeTab2'.tr)), // <-- Changed
-          Center(child: Text('homeTab3'.tr)), // <-- Changed
+          Center(child: Text('homeTab2'.tr)),
+          Center(child: Text('homeTab3'.tr)),
         ],
       ),
     );
@@ -97,22 +111,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('homeSearch'.tr), // <-- Changed
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('homeSearch'.tr),
           content: TextField(
             controller: searchController,
-            decoration: InputDecoration(hintText: 'homeSearchBy'.tr), // <-- Changed
+            decoration: InputDecoration(
+              hintText: 'homeSearchBy'.tr,
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.surface,
+            ),
             onChanged: (query) {
-              setState(() {
-                searchQuery = query;
-              });
+              setState(() => searchQuery = query);
             },
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('homeCancel'.tr), // <-- Changed
+              onPressed: () => Navigator.pop(context),
+              child: Text('homeCancel'.tr, style: TextStyle(color: Theme.of(context).colorScheme.primary)),
             ),
           ],
         );

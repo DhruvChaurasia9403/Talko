@@ -1,12 +1,16 @@
+// File: Pages/Chat/Widgets/SenderChat.dart
+
 import 'package:chatting/Config/images.dart';
+import 'package:chatting/Controller/ChatController.dart';
+import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart';
 
-class SenderChat extends StatefulWidget {
+class SenderChat extends StatelessWidget {
   final String? sms;
   final bool isComing;
   final MessageStatus status;
@@ -29,200 +33,176 @@ class SenderChat extends StatefulWidget {
   });
 
   @override
-  _SenderChatState createState() => _SenderChatState();
-}
-
-class _SenderChatState extends State<SenderChat> {
-  bool isSelected = false;
-  final GlobalKey _messageKey = GlobalKey();
-
-  void _copyMessage() {
-    Clipboard.setData(ClipboardData(text: widget.sms ?? ""));
-    Get.snackbar(
-      "Success",
-      "Message copied to clipboard",
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 1),
-    );
-  }
-
-  void _deleteMessage() {
-    // Implement delete message logic here
-  }
-
-  void _deleteMessageForBoth() {
-    // Implement delete message for both sides logic here
-  }
-
-  void _showPopupMenu() {
-    final RenderBox renderBox = _messageKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset offset = renderBox.localToGlobal(Offset.zero);
-    final Size size = renderBox.size;
-
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy,
-        offset.dx + size.width,
-        offset.dy + size.height,
-      ),
-      items: [
-        const PopupMenuItem<String>(
-          value: 'Copy',
-          child: Text('Copy'),
-        ),
-        const PopupMenuItem<String>(
-          value: 'Delete',
-          child: Text('Delete'),
-        ),
-        if (widget.senderId == 'currentUserId') // Replace 'currentUserId' with actual current user ID
-          const PopupMenuItem<String>(
-            value: 'Delete for both',
-            child: Text('Delete for both'),
-          ),
-      ],
-    ).then((value) {
-      if (value != null) {
-        switch (value) {
-          case 'Copy':
-            _copyMessage();
-            break;
-          case 'Delete':
-            _deleteMessage();
-            break;
-          case 'Delete for both':
-            if (widget.senderId == 'currentUserId') { // Replace 'currentUserId' with actual current user ID
-              _deleteMessageForBoth();
-            }
-            break;
-        }
-      }
-      setState(() {
-        isSelected = false;
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if ((widget.sms == null || widget.sms!.isEmpty) && (widget.imageUrl == null || widget.imageUrl!.isEmpty)) {
+    if ((sms == null || sms!.isEmpty) && (imageUrl == null || imageUrl!.isEmpty)) {
       return const SizedBox.shrink();
     }
 
-    // List of colors to cycle through for sent messages
-    final List<Color> colors = [
-      Colors.blue,
-      Colors.green,
-      Colors.red,
-      Colors.orange,
-      Colors.purple,
-    ];
+    final chatController = Get.find<ChatController>();
+    final isVoid = senderId == "VOID";
+    final isMe = senderId == Get.find<ProfileController>().currentUser.value.id;
 
-    // Select color based on the index for sent messages
-    final Color containerColor = widget.isComing ? Colors.grey.shade200 : colors[widget.index % colors.length];
+    final bubbleColor = isVoid
+        ? Colors.black87
+        : (isMe ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primaryContainer);
 
-    return GestureDetector(
-      onLongPress: () {
-        setState(() {
-          isSelected = true;
-        });
-        _showPopupMenu();
-      },
-      onTap: () {
-        if (isSelected) {
-          setState(() {
-            isSelected = false;
-          });
-        }
-      },
-      child: Container(
-        key: _messageKey,
-        color: Colors.transparent,
-        child: Row(
-          mainAxisAlignment: widget.isComing ? MainAxisAlignment.start : MainAxisAlignment.end,
-          children: [
-            if (!widget.isComing) const Spacer(),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: widget.isComing ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                children: [
-                  if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          widget.imageUrl!,
-                          fit: BoxFit.cover,
-                          width: MediaQuery.sizeOf(context).width / 1.5,
-                          height: 200,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            color: Colors.grey.shade200,
-                            child: const Center(child: Text("Image not found")),
+    final textColor = isVoid
+        ? Theme.of(context).colorScheme.primary
+        : (isMe ? Colors.black87 : Colors.white);
+
+    return Obx(() {
+      bool isSelected = chatController.selectedMessageIds.contains(messageId);
+
+      return GestureDetector(
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          chatController.toggleMessageSelection(messageId);
+        },
+        onTap: () {
+          // If we are currently in selection mode, tapping selects more messages instead of doing nothing
+          if (chatController.selectedMessageIds.isNotEmpty) {
+            chatController.toggleMessageSelection(messageId);
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          color: isSelected ? Theme.of(context).colorScheme.secondary.withOpacity(0.2) : Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisAlignment: isVoid ? MainAxisAlignment.center : (isMe ? MainAxisAlignment.end : MainAxisAlignment.start),
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (isMe && !isVoid) const Spacer(),
+
+                Flexible(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * (isVoid ? 0.9 : 0.75)),
+                        decoration: BoxDecoration(
+                          color: bubbleColor,
+                          border: isVoid ? Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5), width: 1) : null,
+                          boxShadow: [
+                            BoxShadow(
+                              color: isVoid ? Theme.of(context).colorScheme.primary.withOpacity(0.2) : Colors.black.withOpacity(0.1),
+                              blurRadius: isVoid ? 10 : 5,
+                              offset: const Offset(0, 2),
+                            )
+                          ],
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(18),
+                            topRight: const Radius.circular(18),
+                            bottomLeft: isVoid ? const Radius.circular(18) : (isMe ? const Radius.circular(18) : const Radius.circular(4)),
+                            bottomRight: isVoid ? const Radius.circular(18) : (isMe ? const Radius.circular(4) : const Radius.circular(18)),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 14.0),
+                          child: Column(
+                            crossAxisAlignment: isVoid ? CrossAxisAlignment.center : (isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start),
+                            children: [
+                              if (isVoid)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 6.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.smart_toy, size: 14, color: Theme.of(context).colorScheme.primary),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "V.O.I.D. SYSTEM",
+                                        style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                                      )
+                                    ],
+                                  ),
+                                ),
+
+                              if (imageUrl != null && imageUrl!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(imageUrl!, fit: BoxFit.cover),
+                                  ),
+                                ),
+
+                              if (sms != null && sms!.isNotEmpty)
+                                Text(
+                                  sms!,
+                                  textAlign: isVoid ? TextAlign.center : TextAlign.start,
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: textColor,
+                                  ),
+                                ),
+
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  if (timestamp != null)
+                                    Text(
+                                      DateFormat('hh:mm a').format(timestamp!),
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        color: isMe ? Colors.black54 : Colors.white60,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  if (isMe) ...[
+                                    const SizedBox(width: 4),
+                                    SvgPicture.asset(
+                                      status == MessageStatus.read
+                                          ? AssetsImage.doubleBlueTickSVG
+                                          : status == MessageStatus.delivered
+                                          ? AssetsImage.doubleTickSVG
+                                          : status == MessageStatus.sent
+                                          ? AssetsImage.singleTickSVG
+                                          : AssetsImage.errorSVG,
+                                      height: 12,
+                                      width: 12,
+                                      colorFilter: status != MessageStatus.read
+                                          ? const ColorFilter.mode(Colors.black54, BlendMode.srcIn)
+                                          : null,
+                                    ),
+                                  ]
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                  if (widget.sms != null && widget.sms!.isNotEmpty)
-                    Container(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.sizeOf(context).width / 1.3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.grey : containerColor,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(10),
-                          topRight: const Radius.circular(10),
-                          bottomLeft: widget.isComing ? Radius.zero : const Radius.circular(10),
-                          bottomRight: widget.isComing ? const Radius.circular(10) : Radius.zero,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                        child: Text(
-                          widget.sms!,
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: widget.isComing ? Colors.black : Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 1),
-                  if (widget.sms != null || (widget.imageUrl != null && widget.imageUrl!.isNotEmpty))
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (widget.timestamp != null)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4.0),
-                            child: Text(
-                              DateFormat('hh:mm a').format(widget.timestamp!),
-                              style: Theme.of(context).textTheme.labelSmall,
+
+                      // Highlight Checkmark overlay when selected
+                      if (isSelected)
+                        Positioned(
+                          left: isMe ? -10 : null,
+                          right: !isMe ? -10 : null,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.blueAccent,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              child: const Icon(Icons.check, color: Colors.white, size: 16),
                             ),
                           ),
-                        if (!widget.isComing)
-                          SvgPicture.asset(
-                            widget.status == MessageStatus.read
-                                ? AssetsImage.doubleBlueTickSVG
-                                : widget.status == MessageStatus.delivered
-                                ? AssetsImage.doubleTickSVG
-                                : widget.status == MessageStatus.sent
-                                ? AssetsImage.singleTickSVG
-                                : AssetsImage.errorSVG,
-                            height: 10,
-                            width: 10,
-                          ),
-                      ],
-                    ),
-                  const SizedBox(height: 10),
-                ],
-              ),
+                        )
+                    ],
+                  ),
+                ),
+
+                if (!isMe && !isVoid) const Spacer(),
+              ],
             ),
-            if (widget.isComing) const Spacer(),
-          ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

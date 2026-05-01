@@ -1,7 +1,17 @@
+// File: Config/colors.dart
 import 'package:flutter/material.dart';
-const dBackgroundColor = Color(0xff0A0A0A);
-const dPrimaryColor = Color(0xffB8860B);//gold color hash code is 0xffD4AF37
-const dContainerColor = Color(0xff424242);
-const dSecondaryColor = Colors.orange;
+
+// Deep, OLED-friendly black
+const dBackgroundColor = Color(0xff000000);
+
+// Vibrant, premium Gold/Yellow that pops on black
+const dPrimaryColor = Color(0xffFFD700);
+
+// Sleek, elevated dark gray for cards/appbars
+const dContainerColor = Color(0xff1C1C1E);
+
+// Smooth secondary accent
+const dSecondaryColor = Color(0xff8E8E93);
+
 const dOnBackgroundColor = Color(0xffFFFFFF);
-const dOnContainerColor = Colors.grey;
+const dOnContainerColor = Color(0xffEBEBF5);

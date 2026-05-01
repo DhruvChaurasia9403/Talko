@@ -1,11 +1,11 @@
+// File: AI/Features/Prompt/UI/create_prompt.dart
+
 import 'dart:ui';
 import 'package:chatting/AI/Model/chat_message_model.dart';
 import 'package:chatting/AI/bloc/chat_bloc.dart';
 import 'package:chatting/Config/images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get/get_core/get_core.dart';
-import 'package:get/get_navigation/get_navigation.dart';
 import 'package:lottie/lottie.dart';
 
 class CreatePromptScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
   TextEditingController textEditingController = TextEditingController();
   final ChatBloc chatBloc = ChatBloc();
   bool _isKeyboardVisible = false;
-  final ScrollController _scrollController = ScrollController(); // Scroll controller for auto-scrolling
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -30,7 +30,8 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _scrollController.dispose(); // Dispose the scroll controller
+    _scrollController.dispose();
+    textEditingController.dispose();
     super.dispose();
   }
 
@@ -42,14 +43,13 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
     });
   }
 
-  /// Function to scroll to the bottom of the chat
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+          curve: Curves.easeOutCubic,
         );
       }
     });
@@ -58,156 +58,194 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacementNamed(context, "/homePage");
+        return false;
+      },
       child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+            onPressed: () => Navigator.pushReplacementNamed(context, "/homePage"),
+          ),
+          title: const Text(
+            "V.O.I.D. SYSTEM",
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 2),
+          ),
+          centerTitle: true,
+        ),
         body: BlocConsumer<ChatBloc, ChatState>(
           bloc: chatBloc,
           listener: (context, state) {
             if (state is ChatSuccessState) {
-              _scrollToBottom(); // Scroll down when a new message arrives
+              _scrollToBottom();
             }
           },
           builder: (context, state) {
-            switch (state.runtimeType) {
-              case ChatSuccessState:
-                List<ChatMessageModel> message = (state as ChatSuccessState).messages;
-                return Stack(
-                  children: [
-                    Container(
-                      height: MediaQuery.of(context).size.height,
-                      width: MediaQuery.of(context).size.width,
-                      decoration: const BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(AssetsImage.aiEarth),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+            List<ChatMessageModel> message = [];
+            if (state is ChatSuccessState) {
+              message = state.messages;
+            }
+
+            return Stack(
+              children: [
+                // Background Image
+                Container(
+                  height: MediaQuery.of(context).size.height,
+                  width: MediaQuery.of(context).size.width,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(AssetsImage.aiEarth),
+                      fit: BoxFit.cover,
                     ),
-                    BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: _isKeyboardVisible ? 8.0 : 0.0, sigmaY: _isKeyboardVisible ? 8.0 : 0.0),
-                      child: Container(
-                        color: Colors.black.withOpacity(_isKeyboardVisible ? 0.3 : 0.2),
-                      ),
-                    ),
-                    Column(
-                      children: [
-                        const SizedBox(height: 60),
-                        const Row(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text(
-                                "V.O.I.D.",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Sixtyfour'
+                  ),
+                ),
+                // Dynamic Blur Overlay
+                BackdropFilter(
+                  filter: ImageFilter.blur(
+                      sigmaX: _isKeyboardVisible ? 10.0 : 4.0,
+                      sigmaY: _isKeyboardVisible ? 10.0 : 4.0
+                  ),
+                  child: Container(
+                    color: Colors.black.withOpacity(_isKeyboardVisible ? 0.6 : 0.4),
+                  ),
+                ),
+                SafeArea(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                          itemCount: message.length,
+                          itemBuilder: (context, index) {
+                            bool isUserMessage = message[index].role == 'user';
+                            return Align(
+                              alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
+                              child: Container(
+                                constraints: BoxConstraints(
+                                  maxWidth: MediaQuery.of(context).size.width * 0.8,
                                 ),
-                              ),
-                            )
-                          ],
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            controller: _scrollController, // Attach scroll controller
-                            itemCount: message.length,
-                            itemBuilder: (context, index) {
-                              bool isUserMessage = message[index].role == 'user';
-                              return Align(
-                                alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                    maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(20),
+                                    topRight: const Radius.circular(20),
+                                    bottomLeft: isUserMessage ? const Radius.circular(20) : const Radius.circular(5),
+                                    bottomRight: isUserMessage ? const Radius.circular(5) : const Radius.circular(20),
                                   ),
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    color: isUserMessage ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.5),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                  child: Text(
-                                    message[index].parts[0].text,
-                                    style: isUserMessage ? const TextStyle(color: Colors.black) : const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        if (chatBloc.generating)
-                          Row(
-                            children: [
-                              SizedBox(
-                                  height: 100,
-                                  width: 100,
-                                  child: Lottie.asset('assets/loader.json')),
-                              const SizedBox(width: 20),
-                              const Text("Loading...")
-                            ],
-                          ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: textEditingController,
-                                  style: const TextStyle(color: Colors.white),
-                                  cursorColor: Colors.white,
-                                  maxLines: 3,
-                                  minLines: 1,
-                                  decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                    hintText: "Ask Artificial Intelligence",
-                                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                    fillColor: Colors.black12,
-                                    filled: true,
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(50),
-                                      borderSide: BorderSide(color: Colors.white),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: isUserMessage
+                                            ? Theme.of(context).colorScheme.primary.withOpacity(0.8)
+                                            : Colors.white.withOpacity(0.15),
+                                        border: Border.all(
+                                          color: isUserMessage ? Colors.transparent : Colors.white.withOpacity(0.2),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+                                      child: Text(
+                                        message[index].parts[0].text,
+                                        style: TextStyle(
+                                          color: isUserMessage ? Colors.black87 : Colors.white,
+                                          fontSize: 16,
+                                          height: 1.4,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
-                                ),
-                                child: CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: Colors.transparent,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.send, color: Colors.white),
-                                    onPressed: () {
-                                      chatBloc.add(ChatGenerateNewTextMessageEvent(inputMessage: textEditingController.text));
-                                      textEditingController.clear();
-                                      _scrollToBottom(); // Scroll down after sending message
-                                    },
-                                  ),
-                                ),
-                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      if (chatBloc.generating)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(height: 40, width: 40, child: Lottie.asset('assets/loader.json')),
+                              const SizedBox(width: 15),
+                              Text("V.O.I.D. is processing...", style: TextStyle(color: Colors.white.withOpacity(0.7))),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                );
-              default:
-                return const SizedBox();
-            }
+                      // Sci-Fi Input Console
+                      ClipRRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: textEditingController,
+                                    style: const TextStyle(color: Colors.white),
+                                    cursorColor: Theme.of(context).colorScheme.primary,
+                                    maxLines: 4,
+                                    minLines: 1,
+                                    decoration: InputDecoration(
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                      hintText: "Initialize prompt...",
+                                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      fillColor: Colors.white.withOpacity(0.1),
+                                      filled: true,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                                          blurRadius: 10,
+                                          spreadRadius: 1,
+                                        )
+                                      ]
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.send, color: Colors.black87),
+                                    onPressed: () {
+                                      if (textEditingController.text.trim().isNotEmpty) {
+                                        chatBloc.add(ChatGenerateNewTextMessageEvent(inputMessage: textEditingController.text));
+                                        textEditingController.clear();
+                                        _scrollToBottom();
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
           },
         ),
       ),
-      onWillPop: () async {
-        // Navigate to the home page when the back button is pressed
-        Navigator.pushReplacementNamed(context, "/homePage");
-        return false; // Prevent default back navigation
-      },
     );
   }
 }

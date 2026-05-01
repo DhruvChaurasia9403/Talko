@@ -126,33 +126,25 @@ class ProfileController extends GetxController {
   }
 
 
+  // Call our secure backend to delete the image
   Future<void> deleteImageFromCloudinary(String imageUrl) async {
     try {
-      const cloudName = "dgsxsujn9"; // Replace with your Cloudinary cloud name
-      const apiKey = "298341531231328"; // Replace with your Cloudinary API key
-      const apiSecret = "P8cYl99PCaAgDTvcJ7XKV6xwnLE"; // Replace with your Cloudinary API secret
+      // Make sure this matches your actual Render URL
+      final url = Uri.parse("https://chatting-server-17pa.onrender.com/deleteImage");
 
-      // Extract public ID from the image URL
-      final publicId = imageUrl.split('/').last.split('.').first;
-
-      final url = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/destroy");
       final response = await http.post(
         url,
-        body: {
-          'public_id': publicId,
-          'api_key': apiKey,
-          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-          'signature': generateSignature(publicId, apiSecret),
-        },
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'imageUrl': imageUrl}),
       );
 
       if (response.statusCode == 200) {
-        print("Image deleted successfully from Cloudinary");
+        print("Image deleted successfully via secure server.");
       } else {
         print("Failed to delete image: ${response.body}");
       }
     } catch (e) {
-      print("Error deleting image from Cloudinary: $e");
+      print("Error communicating with server to delete image: $e");
     }
   }
 

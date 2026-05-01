@@ -4,12 +4,16 @@ import 'package:chatting/Config/Themes.dart';
 import 'package:chatting/Controller/ChatController.dart';
 import 'package:chatting/Controller/NotificationController.dart';
 import 'package:chatting/Pages/Splash/SplashPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; // <-- ADD THIS
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+
+import 'Model/UserModel.dart';
+import 'Pages/Chat/chatPage.dart';
 
 // --- ADD THIS FUNCTION ---
 // This *must* be a top-level function (not inside any class)
@@ -49,6 +53,24 @@ void main() async {
 
   // Register ChatController globally and pass NotificationController
   Get.put(ChatController(notificationController));
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+    print("Notification tapped! Routing to chat...");
+
+    if (message.data.containsKey('senderId')) {
+      String senderId = message.data['senderId'];
+
+      // Fetch the user data from Firestore
+      var userDoc = await FirebaseFirestore.instance.collection('users').doc(senderId).get();
+
+      if (userDoc.exists) {
+        UserModel senderUser = UserModel.fromJson(userDoc.data()!);
+
+        // Use GetX to navigate directly to the chat page
+        Get.toNamed('/homePage'); // Ensure home is in the backstack
+        Get.to(() => chatPage(userModel: senderUser));
+      }
+    }
+  });
 
   runApp(const MyApp());
 }
