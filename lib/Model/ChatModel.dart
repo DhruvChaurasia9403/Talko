@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ChatModel {
   String? id;
   String? message;
@@ -13,6 +14,7 @@ class ChatModel {
   String? documentUrl;
   List<String>? reactions;
   List<dynamic>? replies;
+
   ChatModel({
     this.id,
     this.message,
@@ -28,21 +30,38 @@ class ChatModel {
     this.reactions,
     this.replies,
   });
-  factory ChatModel.fromJson(Map<String, dynamic> json) => ChatModel(
-    id: json["id"],
-    message: json["message"],
-    senderName: json["senderName"],
-    senderId: json["senderId"],
-    receiverId: json["receiverId"],
-    timestamp: json["timestamp"] != null ? (json["timestamp"] as Timestamp).toDate() : null,
-    readStatus: json["readStatus"],
-    imageUrl: json["imageUrl"],
-    videoUrl: json["videoUrl"],
-    audioUrl: json["audioUrl"],
-    documentUrl: json["documentUrl"],
-    reactions: json["reactions"] != null ? List<String>.from(json["reactions"].map((x) => x)) : null,
-    replies: json["replies"] != null ? List<dynamic>.from(json["replies"].map((x) => x)) : null,
-  );
+
+  factory ChatModel.fromJson(Map<String, dynamic> json) {
+    // 1. Bulletproof Timestamp Parsing
+    DateTime? parsedTimestamp;
+    if (json["timestamp"] != null) {
+      if (json["timestamp"] is Timestamp) {
+        parsedTimestamp = (json["timestamp"] as Timestamp).toDate();
+      } else if (json["timestamp"] is String) {
+        parsedTimestamp = DateTime.tryParse(json["timestamp"]);
+      } else if (json["timestamp"] is int) {
+        parsedTimestamp = DateTime.fromMillisecondsSinceEpoch(json["timestamp"]);
+      }
+    }
+
+    return ChatModel(
+      id: json["id"]?.toString(),
+      message: json["message"]?.toString(),
+      senderName: json["senderName"]?.toString(),
+      senderId: json["senderId"]?.toString(),
+      receiverId: json["receiverId"]?.toString(),
+      timestamp: parsedTimestamp,
+      readStatus: json["readStatus"]?.toString() ?? 'unknown',
+      imageUrl: json["imageUrl"]?.toString(),
+      videoUrl: json["videoUrl"]?.toString(),
+      audioUrl: json["audioUrl"]?.toString(),
+      documentUrl: json["documentUrl"]?.toString(),
+      // 2. Safe List Parsing
+      reactions: json["reactions"] is List ? List<String>.from(json["reactions"]) : null,
+      replies: json["replies"] is List ? List<dynamic>.from(json["replies"]) : null,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     "id": id,
     "message": message,
@@ -55,7 +74,7 @@ class ChatModel {
     "videoUrl": videoUrl,
     "audioUrl": audioUrl,
     "documentUrl": documentUrl,
-    "reactions": reactions != null ? List<dynamic>.from(reactions!.map((x) => x)) : null,
-    "replies": replies != null ? List<dynamic>.from(replies!.map((x) => x)) : null,
+    "reactions": reactions != null ? List<dynamic>.from(reactions!) : null,
+    "replies": replies != null ? List<dynamic>.from(replies!) : null,
   };
 }

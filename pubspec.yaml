@@ -43,10 +43,10 @@ dependencies:
   firebase_analytics:
   firebase_storage:
   cloud_firestore:
-  image_picker:
+  image_picker: ^1.2.2
   cloudinary_flutter:
   cloudinary_url_gen:
-  http:
+  http: ^1.6.0
   uuid:
   intl:
   bloc:
@@ -61,6 +61,14 @@ dependencies:
   permission_handler: ^11.4.0
   firebase_messaging:
   firebase_app_check:
+  flutter_contacts:
+  video_player: ^2.11.1
+  chewie: ^1.13.1
+  country_picker:
+  isar:
+  isar_flutter_libs:
+  path_provider:
+  connectivity_plus:
 
 
 
@@ -74,6 +82,8 @@ flutter_launcher_icons:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  build_runner:
+  isar_generator:
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

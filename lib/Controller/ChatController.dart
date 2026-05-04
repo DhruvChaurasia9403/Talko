@@ -3,7 +3,7 @@
 import 'package:chatting/Controller/NotificationController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Model/ChatModel.dart';
-import 'package:chatting/Model/ChatRoomModel.dart';
+import 'package:isar/isar.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,15 +12,33 @@ import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../Model/LocalMessageModel.dart';
+import 'DBController.dart';
+
 class ChatController extends GetxController {
   final auth = FirebaseAuth.instance;
   final db = FirebaseFirestore.instance;
   RxBool isLoading = false.obs;
   var uuid = const Uuid();
   final NotificationController notificationController;
-  ProfileController profileController = Get.put(ProfileController());
 
-  // --- NEW: MESSAGE SELECTION STATE ---
+  ProfileController get profileController => Get.put(ProfileController());
+
+  RxInt messageLimit = 30.obs;
+  RxBool isFetchingMore = false.obs;
+
+  RxBool isVoidTyping = false.obs;
+
+  ChatController(this.notificationController);
+
+  void loadMoreMessages() {
+    messageLimit.value += 30;
+  }
+
+  void resetMessageLimit() {
+    messageLimit.value = 30;
+  }
+
   RxList<String> selectedMessageIds = <String>[].obs;
 
   void toggleMessageSelection(String messageId) {
@@ -46,13 +64,9 @@ class ChatController extends GetxController {
       print("Error deleting messages: $e");
     }
   }
-  // ------------------------------------
 
-  // --- SMART AI REPLIES STATE ---
   RxList<String> smartReplies = <String>[].obs;
   RxBool isFetchingReplies = false.obs;
-
-  ChatController(this.notificationController);
 
   Future<void> _sendNotificationToServer(String receiverId, String message) async {
     final url = Uri.parse("https://chatting-server-17pa.onrender.com/sendNotification");
@@ -70,7 +84,7 @@ class ChatController extends GetxController {
         }),
       );
       if (response.statusCode != 200) {
-        print("Notification server request failed: ${response.body}");
+        print("Notification server failed: ${response.body}");
       }
     } catch (e) {
       print("Error calling notification server: $e");
@@ -78,117 +92,215 @@ class ChatController extends GetxController {
   }
 
   String getRoomId(String targetUserId) {
-    String currentUserId = auth.currentUser!.uid;
-    if (currentUserId[0].codeUnitAt(0) > targetUserId.codeUnitAt(0)) {
-      return currentUserId + targetUserId;
-    } else {
-      return targetUserId + currentUserId;
+    String currentUserId = auth.currentUser!.uid.trim();
+    String targetId = targetUserId.trim();
+    List<String> users = [currentUserId, targetId];
+    users.sort();
+    return users.join("_");
+  }
+
+  Future<void> _pingFirebaseToUpdateUI(String roomId) async {
+    try {
+      final pingRef = db.collection("chats").doc(roomId).collection("messages").doc("UI_PING_${auth.currentUser!.uid}");
+      await pingRef.set({
+        "ping": DateTime.now().millisecondsSinceEpoch,
+        "timestamp": DateTime.now().toIso8601String()
+      });
+    } catch (e) {
+      print("Ping failed: $e");
     }
   }
 
-  Future<void> sendMessage(String targetUserId, String message, UserModel targetUser) async {
-    isLoading.value = true;
+  Future<void> sendMessage(String targetUserId, String message, UserModel targetUser, {String? imageUrl}) async {
+    if (targetUserId.isEmpty) return;
+
     String chatId = uuid.v4();
     String roomId = getRoomId(targetUserId);
-    var newChatModel = ChatModel(
-      id: chatId,
-      message: message,
-      senderId: auth.currentUser!.uid,
-      receiverId: targetUserId,
-      timestamp: DateTime.now(),
-      readStatus: 'sent',
-    );
+    String myUid = auth.currentUser!.uid;
+
+    final dbController = Get.find<DBcontroller>();
+    await dbController.ensureIsarInitialized();
+
+    bool isVoidCommand = message.toLowerCase().contains("@void");
+
+    var localMsg = LocalMessageModel()
+      ..firestoreMessageId = chatId
+      ..roomId = roomId
+      ..message = message
+      ..senderId = myUid
+      ..receiverId = targetUserId
+      ..timestamp = DateTime.now()
+      ..imageUrl = imageUrl
+      ..syncStatus = isVoidCommand ? "local_only" : "pending";
+
+    await dbController.isar.writeTxn(() async {
+      await dbController.isar.localMessageModels.put(localMsg);
+    });
+
+    if (isVoidCommand) {
+      _pingFirebaseToUpdateUI(roomId);
+      _triggerVoidAssistant(roomId, message, targetUserId);
+      return;
+    }
 
     final roomRef = db.collection("chats").doc(roomId);
-    final doc = await roomRef.get();
-
-    int newUnreadCount = 1;
-    if (doc.exists) {
-      try {
-        ChatRoomModel oldRoom = ChatRoomModel.fromJson(doc.data()!);
-        int oldCount = int.tryParse(oldRoom.unReadMessageNo ?? '0') ?? 0;
-        newUnreadCount = oldCount + 1;
-      } catch (e) {
-        print("Error parsing old room, resetting count: $e");
-      }
-    }
-
-    var roomDetails = ChatRoomModel(
-      id: roomId,
-      lastMessage: message,
-      sender: profileController.currentUser.value,
-      lastMessageTimeStamp: DateTime.now(),
-      timeStamp: DateTime.now(),
-      receiver: targetUser,
-      unReadMessageNo: newUnreadCount.toString(),
-      participants: [auth.currentUser!.uid, targetUserId],
-    );
-
     try {
-      await roomRef.set(roomDetails.toJson());
-      await roomRef.collection("messages").doc(chatId).set(newChatModel.toJson());
-      await _sendNotificationToServer(targetUserId, message);
+      WriteBatch batch = db.batch();
 
-      // --- INTERCEPT @VOID COMMAND ---
-      if (message.trim().toUpperCase().startsWith("@VOID")) {
-        String prompt = message.trim().substring(5).trim();
-        if (prompt.isNotEmpty) {
-          _triggerVoidAssistant(roomId, prompt);
-        }
-      }
+      var roomUpdate = {
+        "id": roomId,
+        "participants": [myUid, targetUserId],
+        "lastMessage": imageUrl != null ? "📷 Photo" : message,
+        "lastMessageTimeStamp": DateTime.now().toIso8601String(),
+        "lastMessageSenderId": myUid,
+        "sender": profileController.currentUser.value.toJson(),
+        "receiver": targetUser.toJson(),
+      };
+      batch.set(roomRef, roomUpdate, SetOptions(merge: true));
+
+      var newChatModel = ChatModel(
+        id: chatId,
+        message: message,
+        senderId: myUid,
+        receiverId: targetUserId,
+        senderName: profileController.currentUser.value.name,
+        timestamp: DateTime.now(),
+        readStatus: 'sent',
+        imageUrl: imageUrl,
+      );
+
+      batch.set(roomRef.collection("messages").doc(chatId), newChatModel.toJson());
+
+      await batch.commit();
+
+      await dbController.isar.writeTxn(() async {
+        localMsg.syncStatus = "synced";
+        await dbController.isar.localMessageModels.put(localMsg);
+      });
+
+      _sendNotificationToServer(targetUserId, message);
+
     } catch (ex) {
-      print(ex);
+      print("Message queued offline: $ex");
     }
-    isLoading.value = false;
   }
 
-  Future<void> _triggerVoidAssistant(String roomId, String prompt) async {
+  // --- THE CRITICAL FIX: ALWAYS SAVE A RESPONSE EVEN ON SERVER ERROR ---
+  Future<void> _triggerVoidAssistant(String roomId, String prompt, String targetUserId) async {
+    final dbController = Get.find<DBcontroller>();
+    isVoidTyping.value = true;
+
+    // Default error message just in case the server fails
+    String finalReply = "System: V.O.I.D. encountered an unknown error.";
+
     try {
-      db.collection("chats").doc(roomId).set({'typing_VOID': true}, SetOptions(merge: true));
       final url = Uri.parse("https://chatting-server-17pa.onrender.com/askVoid");
 
+      // Render cold starts take ~40 seconds. We must allow enough time for it to wake up.
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'prompt': prompt}),
-      );
+      ).timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         String voidResponse = data['response'];
-
-        String voidChatId = uuid.v4();
-        var voidMessageModel = ChatModel(
-          id: voidChatId,
-          message: voidResponse,
-          senderId: "VOID",
-          senderName: "V.O.I.D. System",
-          timestamp: DateTime.now(),
-          readStatus: 'read',
-        );
-
-        await db.collection("chats").doc(roomId).collection("messages").doc(voidChatId).set(voidMessageModel.toJson());
-
-        await db.collection("chats").doc(roomId).update({
-          'lastMessage': "✨ V.O.I.D. replied",
-          'lastMessageTimeStamp': DateTime.now().toIso8601String(),
-        });
+        finalReply = voidResponse.replaceAll(RegExp(r'\*\*|\*'), '').trim();
+      } else {
+        // Capture specific server errors (e.g. Gemini quota exceeded, bad request)
+        finalReply = "System: Server returned Error ${response.statusCode}\nDetails: ${response.body}";
       }
     } catch (e) {
       print("V.O.I.D. Error: $e");
+      // If Render was asleep and it timed out, tell the user!
+      finalReply = "System: Connection timed out or failed. Error: $e";
     } finally {
-      db.collection("chats").doc(roomId).set({'typing_VOID': false}, SetOptions(merge: true));
+      // --- ALWAYS SAVE THE MESSAGE SO THE UI SPINNER DOESN'T VANISH SILENTLY ---
+      var localVoidMsg = LocalMessageModel()
+        ..firestoreMessageId = uuid.v4()
+        ..roomId = roomId
+        ..message = finalReply
+        ..senderId = "VOID"
+        ..receiverId = auth.currentUser!.uid
+        ..timestamp = DateTime.now()
+        ..syncStatus = "local_only";
+
+      await dbController.isar.writeTxn(() async {
+        await dbController.isar.localMessageModels.put(localVoidMsg);
+      });
+
+      _pingFirebaseToUpdateUI(roomId); // Wake UI for AI response
+      isVoidTyping.value = false;
     }
   }
 
   Stream<List<ChatModel>> getMessages(String targetUserId) {
     String roomId = getRoomId(targetUserId);
+    final dbController = Get.find<DBcontroller>();
+    String myUid = auth.currentUser!.uid;
+
     return db.collection("chats")
         .doc(roomId)
         .collection("messages")
-        .orderBy("timestamp", descending: false)
+        .orderBy("timestamp", descending: true)
+        .limit(messageLimit.value)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => ChatModel.fromJson(doc.data())).toList());
+        .asyncMap((snapshot) async {
+
+      await dbController.ensureIsarInitialized();
+
+      var fbMessages = snapshot.docs
+          .where((doc) => !doc.id.contains("UI_PING"))
+          .map((doc) => ChatModel.fromJson(doc.data()))
+          .toList();
+
+      var allLocal = await dbController.isar.localMessageModels
+          .filter()
+          .roomIdEqualTo(roomId)
+          .findAll();
+
+      List<LocalMessageModel> secureLocal = allLocal.where((msg) {
+        bool isPendingOrLocal = msg.syncStatus == "pending" || msg.syncStatus == "local_only";
+        if (msg.syncStatus == "local_only") {
+          return isPendingOrLocal && (msg.senderId == myUid || msg.receiverId == myUid);
+        }
+        return isPendingOrLocal;
+      }).toList();
+
+      var localFb = secureLocal.map((local) {
+        String resolvedStatus = "unknown";
+        if (local.syncStatus == "local_only") {
+          resolvedStatus = local.senderId == myUid ? "sent" : "read";
+        }
+
+        return ChatModel(
+          id: local.firestoreMessageId ?? "temp_id",
+          message: local.message ?? "",
+          senderId: local.senderId ?? "",
+          receiverId: local.receiverId ?? "",
+          timestamp: local.timestamp ?? DateTime.now(),
+          readStatus: resolvedStatus,
+          imageUrl: local.imageUrl,
+        );
+      }).toList();
+
+      var combined = [...localFb, ...fbMessages];
+
+      final Map<String, ChatModel> uniqueMessages = {};
+      for (var msg in combined) {
+        if (msg.id != null) uniqueMessages[msg.id!] = msg;
+      }
+
+      var finalList = uniqueMessages.values.toList();
+      finalList.sort((a, b) {
+        DateTime timeA = a.timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+        DateTime timeB = b.timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return timeB.compareTo(timeA);
+      });
+
+      return finalList.reversed.toList();
+    });
   }
 
   Future<void> updateMessageReadStatus(String roomId, String messageId) async {
@@ -201,7 +313,6 @@ class ChatController extends GetxController {
     }
   }
 
-  // --- TYPING INDICATORS ---
   void updateTypingStatus(String targetUserId, bool isTyping) {
     String roomId = getRoomId(targetUserId);
     db.collection("chats").doc(roomId).set({
@@ -219,13 +330,11 @@ class ChatController extends GetxController {
     });
   }
 
-  // --- SMART REPLIES ---
   Future<void> fetchSmartReplies(List<ChatModel> recentMessages) async {
     if (recentMessages.isEmpty || recentMessages.last.senderId == auth.currentUser!.uid) {
       smartReplies.clear();
       return;
     }
-
     isFetchingReplies.value = true;
     try {
       var lastFive = recentMessages.length > 5 ? recentMessages.sublist(recentMessages.length - 5) : recentMessages;
@@ -235,7 +344,6 @@ class ChatController extends GetxController {
       }).join("\n");
 
       final url = Uri.parse("https://chatting-server-17pa.onrender.com/generateSmartReplies");
-
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

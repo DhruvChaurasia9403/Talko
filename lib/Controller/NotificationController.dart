@@ -11,10 +11,9 @@ class NotificationController {
 
   NotificationController(this.flutterLocalNotificationsPlugin) {
     tz.initializeTimeZones();
-    _initializeNotifications();
   }
 
-  Future<void> _initializeNotifications() async {
+  Future<void> initializeNotifications() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosInit = DarwinInitializationSettings();
     const initSettings = InitializationSettings(
@@ -24,12 +23,10 @@ class NotificationController {
 
     await flutterLocalNotificationsPlugin.initialize(initSettings);
 
-    // --- This is the new, important part ---
-    // Create the high-importance channel for Android
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // id
-      'High Importance Notifications', // title
-      description: 'This channel is used for important chat notifications.', // description
+      'high_importance_channel',
+      'High Importance Notifications',
+      description: 'This channel is used for important chat notifications.',
       importance: Importance.high,
       playSound: true,
     );
@@ -38,7 +35,6 @@ class NotificationController {
         .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
-    // --- End of new part ---
 
     // Request permissions
     if (Platform.isAndroid) {
@@ -89,7 +85,7 @@ class NotificationController {
   // It is fine to leave here for other features.
   Future<void> scheduleNotification(int seconds) async {
     if (!await Permission.notification.isGranted) {
-      await _initializeNotifications();
+      await initializeNotifications();
       return;
     }
 

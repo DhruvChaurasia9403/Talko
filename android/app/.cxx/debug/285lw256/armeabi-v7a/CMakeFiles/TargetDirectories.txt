@@ -1,0 +1,2 @@
+C:/Users/wwwth/StudioProjects/chatting/android/app/.cxx/debug/285lw256/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/wwwth/StudioProjects/chatting/android/app/.cxx/debug/285lw256/armeabi-v7a/CMakeFiles/rebuild_cache.dir

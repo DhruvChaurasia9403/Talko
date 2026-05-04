@@ -26,7 +26,6 @@ class chatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ChatController contactController = Get.find<ChatController>();
     bool hasUnread = (unreadCount != null && unreadCount != '0');
 
     return InkWell(

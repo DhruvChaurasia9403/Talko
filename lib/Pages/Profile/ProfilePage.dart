@@ -1,12 +1,14 @@
 // File: Pages/Profile/ProfilePage.dart
 
+import 'dart:ui';
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ImagePickerController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
-import 'package:chatting/Widgets/PrimaryButton.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../Controller/DBController.dart';
+import '../../Controller/LocalContactsController.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -15,242 +17,202 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final ProfileController profileController = Get.find<ProfileController>();
     final ImagePickerController imagePickerController = Get.put(ImagePickerController());
+
     final RxBool isEdit = false.obs;
-    final RxString imagePath = AssetsImage.defaultPic.obs;
+    final RxString imagePath = "".obs;
     final RxBool isLoading = false.obs;
 
-    Future<void> updateProfileImageInFirebase(String imageUrl) async {
-      try {
-        final String userId = profileController.currentUser.value.id ?? "";
-        if (userId.isNotEmpty) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .update({'profileImage': imageUrl});
-          print('Profile image URL updated in Firestore');
-        } else {
-          print('Error: User ID is empty');
-        }
-      } catch (e) {
-        print('Error updating profile image in Firebase: $e');
-      }
-    }
-
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          'profile'.tr, // <-- Changed
-          style: Theme.of(context).textTheme.labelLarge,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          onPressed: () => Get.offAllNamed('/homePage'),
         ),
         actions: [
           IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed:(){
-                Get.offAllNamed('/authPage');
-                profileController.signOut();
-              }
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            onPressed: () async {
+              // 1. Sign out of Firebase
+              await profileController.signOut();
+              // 2. Safely route back to Auth (Do NOT delete controllers)
+              Get.offAllNamed('/authPage');
+            },
           )
         ],
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () {
-            Get.offAllNamed('/homePage');
-          },
+      ),
+      body: Stack(
+        children: [
+          // Background
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(image: AssetImage(AssetsImage.aiEarth), fit: BoxFit.cover),
+            ),
+          ),
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
+            child: Container(color: Colors.black.withOpacity(0.75)),
+          ),
+
+          SafeArea(
+            child: Obx(() {
+              final currentUser = profileController.currentUser.value;
+              final TextEditingController name = TextEditingController(text: currentUser.name ?? "");
+              final TextEditingController about = TextEditingController(text: currentUser.about ?? "");
+
+              // Set initial image
+              if (imagePath.value.isEmpty && currentUser.profileImage != null) {
+                imagePath.value = currentUser.profileImage!;
+              }
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  children: [
+                    // --- AVATAR SECTION ---
+                    GestureDetector(
+                      onTap: () async {
+                        if (isEdit.value) {
+                          String? url = await imagePickerController.pickAndUploadImage();
+                          if (url != null) imagePath.value = url;
+                        }
+                      },
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            height: 160,
+                            width: 160,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5), width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                                  blurRadius: 30,
+                                  spreadRadius: 5,
+                                )
+                              ],
+                            ),
+                            child: imagePickerController.isUploading.value
+                                ? const Center(child: CircularProgressIndicator())
+                                : ClipRRect(
+                              borderRadius: BorderRadius.circular(100),
+                              child: Image.network(
+                                imagePath.value.isNotEmpty ? imagePath.value : AssetsImage.defaultPic,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          if (isEdit.value)
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
+                              child: const Icon(Icons.camera_alt, color: Colors.black, size: 24),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // --- DETAILS SECTION ---
+                    _buildProfileField(context, "Display Name", Icons.person, name, isEdit.value),
+                    const SizedBox(height: 20),
+                    _buildProfileField(context, "About", Icons.info_outline, about, isEdit.value),
+                    const SizedBox(height: 20),
+
+                    // Non-editable Phone Number
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.phone, color: Colors.white54),
+                          const SizedBox(width: 15),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Phone Number", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                              const SizedBox(height: 4),
+                              Text(currentUser.phoneNumber ?? "Unknown", style: const TextStyle(color: Colors.white, fontSize: 16)),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+
+                    // --- ACTION BUTTON ---
+                    isLoading.value
+                        ? const CircularProgressIndicator()
+                        : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (isEdit.value) {
+                            isLoading.value = true;
+                            await profileController.updateUserProfile(
+                              imageUrl: imagePath.value,
+                              name: name.text.trim(),
+                              about: about.text.trim(),
+                              phoneNumber: currentUser.phoneNumber ?? "",
+                            );
+                            isLoading.value = false;
+                            isEdit.value = false;
+                          } else {
+                            isEdit.value = true;
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isEdit.value ? Theme.of(context).colorScheme.primary : Colors.white10,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        ),
+                        child: Text(
+                          isEdit.value ? "Save Changes" : "Edit Profile",
+                          style: TextStyle(
+                            color: isEdit.value ? Colors.black : Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileField(BuildContext context, String label, IconData icon, TextEditingController controller, bool isEdit) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(isEdit ? 0.8 : 0.4),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isEdit ? Theme.of(context).colorScheme.primary.withOpacity(0.5) : Colors.transparent),
+      ),
+      child: TextField(
+        controller: controller,
+        enabled: isEdit,
+        style: TextStyle(color: isEdit ? Colors.white : Colors.white70, fontSize: 16),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white54),
+          prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          border: InputBorder.none,
         ),
       ),
-      body: Obx(() {
-        final currentUser = profileController.currentUser.value;
-        final TextEditingController name = TextEditingController(text: currentUser.name ?? "");
-        final TextEditingController phone = TextEditingController(text: currentUser.phoneNumber ?? "");
-        final TextEditingController about = TextEditingController(text: currentUser.about ?? "");
-
-        return Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Obx(() {
-                              return isEdit.value
-                                  ? InkWell(
-                                onTap: () async {
-                                  imagePath.value = await imagePickerController.pickImage();
-                                  print("IMAGE PICKED : ${imagePath.value}");
-                                },
-                                child: Container(
-                                  width: 200,
-                                  height: 200,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.surface,
-                                    borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(
-                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: imagePath.value.isEmpty
-                                      ? (currentUser.profileImage != null
-                                      ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(100),
-                                    child: Image.network(
-                                      currentUser.profileImage!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                      : const Icon(Icons.add))
-                                      : ClipRRect(
-                                    borderRadius: BorderRadius.circular(100),
-                                    child: Image.network(
-                                      imagePath.value,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              )
-                                  : Container(
-                                width: 200,
-                                height: 200,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(100),
-                                  border: Border.all(
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: currentUser.profileImage != null
-                                    ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(100),
-                                  child: Image.network(
-                                    currentUser.profileImage!,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                                    : const Icon(Icons.image),
-                              );
-                            }),
-                          ],
-                        ),
-                        Obx(
-                              () => Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextFormField(
-                              controller: name,
-                              style: Theme.of(context).textTheme.headlineSmall,
-                              enabled: isEdit.value,
-                              decoration: InputDecoration(
-                                labelText: 'name'.tr, // <-- Changed
-                                filled: isEdit.value,
-                                prefixIcon: const Icon(Icons.person, color: Colors.white60),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Obx(
-                              () => Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextFormField(
-                              controller: about,
-                              style: Theme.of(context).textTheme.headlineSmall,
-                              enabled: isEdit.value,
-                              decoration: InputDecoration(
-                                labelText: 'profileAbout'.tr, // <-- Changed
-                                filled: isEdit.value,
-                                prefixIcon: const Icon(Icons.info, color: Colors.white60),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white60),
-                            enabled: false,
-                            decoration: InputDecoration(
-                              labelText: 'email'.tr, // <-- Changed
-                              fillColor: Theme.of(context).colorScheme.primaryContainer,
-                              prefixIcon: const Icon(Icons.alternate_email, color: Colors.white60),
-                            ),
-                          ),
-                        ),
-                        Obx(
-                              () => Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextFormField(
-                              controller: phone,
-                              style: Theme.of(context).textTheme.headlineSmall,
-                              enabled: isEdit.value,
-                              decoration: InputDecoration(
-                                labelText: 'profilePhoneNumber'.tr, // <-- Changed
-                                filled: isEdit.value,
-                                prefixIcon: const Icon(Icons.phone, color: Colors.white60),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 50),
-                        Obx(
-                              () => Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              isEdit.value
-                                  ? Primarybutton(
-                                btnName: 'profileSave'.tr, // <-- Changed
-                                icon: Icons.save,
-                                onTap: () async {
-                                  isLoading.value = true;
-                                  isEdit.value = false;
-                                  if (imagePath.value.isNotEmpty) {
-                                    await updateProfileImageInFirebase(imagePath.value);
-                                  }
-                                  await profileController.updateUserProfile(
-                                    imageUrl: imagePath.value.isNotEmpty
-                                        ? imagePath.value
-                                        : currentUser.profileImage!,
-                                    name: name.text,
-                                    about: about.text,
-                                    phoneNumber: phone.text,
-                                  );
-                                  isLoading.value = false;
-                                  print("Profile details saved successfully.");
-                                },
-                              )
-                                  : Primarybutton(
-                                btnName: 'profileEdit'.tr, // <-- Changed
-                                icon: Icons.edit,
-                                onTap: () {
-                                  isEdit.value = true;
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Obx(() {
-                          return isLoading.value ? const CircularProgressIndicator() : const SizedBox.shrink();
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
     );
   }
 }
