@@ -44,4 +44,4 @@ app.*.map.json
 # Custom ignored files
 /android/app/google-services.json
 /firebase.json
-
+*.g.dart
