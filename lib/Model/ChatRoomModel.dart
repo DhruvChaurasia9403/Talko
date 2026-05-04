@@ -6,7 +6,7 @@ class ChatRoomModel {
   UserModel? receiver;
   List<String>? participants;
   String? lastMessage;
-  String? unReadMessageNo;
+  int? unReadMessageNo;
   DateTime? timeStamp;
   DateTime? lastMessageTimeStamp;
   String? lastMessageSenderId; // <-- THE CORE FIX
@@ -38,7 +38,9 @@ class ChatRoomModel {
     receiver = json['receiver'] != null ? UserModel.fromJson(json['receiver']) : null;
     participants = json['participants'] != null ? List<String>.from(json['participants']) : null;
     lastMessage = json['lastMessage'];
-    unReadMessageNo = json['unReadMessageNo'];
+    unReadMessageNo = json['unReadMessageNo'] is int
+        ? json['unReadMessageNo']
+        : int.tryParse(json['unReadMessageNo'].toString()) ?? 0;
     timeStamp = json['timeStamp'] != null ? DateTime.parse(json['timeStamp']) : null;
     lastMessageTimeStamp = json['lastMessageTimeStamp'] != null ? DateTime.parse(json['lastMessageTimeStamp']) : null;
     lastMessageSenderId = json['lastMessageSenderId']; // <-- NEW

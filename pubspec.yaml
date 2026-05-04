@@ -69,19 +69,16 @@ dependencies:
   isar_flutter_libs:
   path_provider:
   connectivity_plus:
+  shimmer:
 
-
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/Icons/chatLogo.png"
 
 
   crypto: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.6
   build_runner:
   isar_generator:
 
@@ -91,6 +88,19 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+flutter_launcher_icons:
+  image_path: "assets/Images/sampark_blue_logo.png"
+  android: true
+
+flutter_native_splash:
+  color: "#101418"
+  image: "assets/Images/sampark_blue_logo.png" # Remember, native splashes prefer PNGs!
+  android: true
+  ios: true
+  android_12:
+    image: "assets/Images/sampark_blue_logo.png"
+    icon_background_color: "#101418"
+#      C:\Users\wwwth\StudioProjects\chatting\assets\Icons\sampark_blue_logo:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

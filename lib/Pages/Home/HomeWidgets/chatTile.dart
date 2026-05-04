@@ -1,6 +1,6 @@
 // File: Pages/Home/HomeWidgets/chatTile.dart
 
-import 'package:chatting/Controller/ChatController.dart';
+import 'package:chatting/Controller/ThemeController.dart';
 import 'package:chatting/Pages/Chat/chatPage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,37 +26,48 @@ class chatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool hasUnread = (unreadCount != null && unreadCount != '0');
-
+    final bool hasUnread =
+        unreadCount != null && unreadCount != "0" && unreadCount!.isNotEmpty;
+    final ThemeController themeController = Get.find<ThemeController>();
     return InkWell(
       onTap: () {
-        Get.to(() => chatPage(userModel: userModel), transition: Transition.cupertino);
+        Get.to(() => chatPage(userModel: userModel),
+            transition: Transition.cupertino);
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.all(8),
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           color: hasUnread
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-              : Theme.of(context).colorScheme.surface,
+              ? themeController.isDark ? Colors.black : Colors.white
+              : themeController.isDark ? Colors.black54 : Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: themeController.isDark
+                  ? Colors.black.withOpacity(0.5)
+                  : Colors.grey.withOpacity(0.2),
+              blurRadius: 12,
+              spreadRadius: 1,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               children: [
-                // --- HERO ANIMATION ADDED HERE ---
                 Hero(
                   tag: 'profile_${userModel.id}',
                   child: Container(
-                    height: 60,
-                    width: 60,
+                    height: 58,
+                    width: 58,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withOpacity(0.25),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         )
@@ -71,52 +82,78 @@ class chatTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                // --- END HERO ---
-                const SizedBox(width: 15),
+                const SizedBox(width: 14),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       name,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: hasUnread ? FontWeight.bold : FontWeight.w600,
+                      style:
+                      Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: hasUnread
+                            ? FontWeight.bold
+                            : FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 5),
                     SizedBox(
                       width: MediaQuery.of(context).size.width * 0.45,
                       child: Text(
-                          lastChat,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: hasUnread
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).textTheme.labelMedium?.color,
-                          )
+                        lastChat,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelMedium
+                            ?.copyWith(
+                          color: hasUnread
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                              .textTheme
+                              .labelMedium
+                              ?.color,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ],
             ),
+
+            /// 🔥 UNREAD BADGE
             if (hasUnread)
               Container(
-                padding: const EdgeInsets.all(8),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      )
-                    ]
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.7),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
                 ),
                 child: Text(
                   unreadCount!,
-                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
           ],

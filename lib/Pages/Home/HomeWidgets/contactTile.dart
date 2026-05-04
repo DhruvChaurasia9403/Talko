@@ -8,8 +8,11 @@ import 'package:chatting/Pages/Home/HomeWidgets/chatTile.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../Widgets/skeleton_chat_tile.dart';
+
 class contactTile extends StatelessWidget {
-  final String searchQuery;
+  final RxString searchQuery;
+
   const contactTile({super.key, required this.searchQuery});
 
   @override
@@ -18,50 +21,65 @@ class contactTile extends StatelessWidget {
 
     return Obx(() {
       if (dbController.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return ListView.builder(
+          padding: const EdgeInsets.only(top: 180, bottom: 120),
+          itemCount: 8,
+          itemBuilder: (context, index) {
+            return const SkeletonChatTile();
+          },
+        );
       }
 
       String myUid = dbController.auth.currentUser!.uid;
+      String query = searchQuery.value.toLowerCase();
 
-      // --- BULLETPROOF NULL-SAFETY ---
-      List<ChatRoomModel> filteredRooms = dbController.chatRoomList.where((room) {
+      List<ChatRoomModel> filteredRooms =
+      dbController.chatRoomList.where((room) {
         UserModel otherUser;
-        if (room.sender != null && room.sender!.id == myUid) {
-          otherUser = room.receiver ?? UserModel(id: "unknown", name: "Unknown User");
-        } else if (room.receiver != null && room.receiver!.id == myUid) {
-          otherUser = room.sender ?? UserModel(id: "unknown", name: "Unknown User");
+
+        if (room.sender?.id == myUid) {
+          otherUser =
+              room.receiver ?? UserModel(id: "unknown", name: "Unknown");
         } else {
-          otherUser = room.sender ?? room.receiver ?? UserModel(id: "unknown", name: "Unknown User");
+          otherUser =
+              room.sender ?? UserModel(id: "unknown", name: "Unknown");
         }
 
-        return otherUser.name != null && otherUser.name!.toLowerCase().contains(searchQuery.toLowerCase());
+        return otherUser.name != null &&
+            otherUser.name!.toLowerCase().contains(query);
       }).toList();
 
       if (filteredRooms.isEmpty) {
-        return const Center(child: Text("No chats found.", style: TextStyle(color: Colors.white54)));
+        return Center(
+          child: Text(
+            query.isEmpty ? "No chats found." : "No results for '$query'",
+            style: const TextStyle(color: Colors.white54),
+          ),
+        );
       }
 
       return ListView.builder(
-        // --- UI OVERLAP FIX: Push list down 140px to clear the AppBar ---
-        padding: const EdgeInsets.only(top: 165, bottom: 80),
+        padding: const EdgeInsets.only(top: 180, bottom: 120),
         itemCount: filteredRooms.length,
         itemBuilder: (context, index) {
           final room = filteredRooms[index];
 
-          // Safely determine the other user again
           UserModel otherUser;
-          if (room.sender != null && room.sender!.id == myUid) {
-            otherUser = room.receiver ?? UserModel(id: "unknown", name: "Unknown User");
-          } else if (room.receiver != null && room.receiver!.id == myUid) {
-            otherUser = room.sender ?? UserModel(id: "unknown", name: "Unknown User");
+
+          if (room.sender?.id == myUid) {
+            otherUser =
+                room.receiver ?? UserModel(id: "unknown", name: "Unknown");
           } else {
-            otherUser = room.sender ?? room.receiver ?? UserModel(id: "unknown", name: "Unknown User");
+            otherUser =
+                room.sender ?? UserModel(id: "unknown", name: "Unknown");
           }
 
+          /// 🔥 FIXED UNREAD LOGIC
+          int count = room.unReadMessageNo ?? 0;
+
           String? unreadCount;
-          int count = int.tryParse(room.unReadMessageNo ?? '0') ?? 0;
           if (count > 0 && room.lastMessageSenderId != myUid) {
-            unreadCount = room.unReadMessageNo;
+            unreadCount = count.toString();
           }
 
           return chatTile(

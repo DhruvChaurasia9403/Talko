@@ -1,11 +1,12 @@
-// File: AI/Features/Prompt/UI/create_prompt.dart
-
 import 'dart:ui';
 import 'package:chatting/AI/Model/chat_message_model.dart';
 import 'package:chatting/AI/bloc/chat_bloc.dart';
-import 'package:chatting/Config/images.dart';
+import '../../../../Controller/ThemeController.dart'; // Adjust depth as needed
+import 'package:chatting/Widgets/PremiumSurface.dart';
+import 'package:chatting/Widgets/AmbientBackground.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 
 class CreatePromptScreen extends StatefulWidget {
@@ -18,7 +19,7 @@ class CreatePromptScreen extends StatefulWidget {
 class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBindingObserver {
   TextEditingController textEditingController = TextEditingController();
   final ChatBloc chatBloc = ChatBloc();
-  bool _isKeyboardVisible = false;
+  final ThemeController themeController = Get.find<ThemeController>();
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -35,14 +36,6 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
     super.dispose();
   }
 
-  @override
-  void didChangeMetrics() {
-    final bottomInset = WidgetsBinding.instance.window.viewInsets.bottom;
-    setState(() {
-      _isKeyboardVisible = bottomInset > 0;
-    });
-  }
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -57,193 +50,178 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> with WidgetsBin
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        Navigator.pushReplacementNamed(context, "/homePage");
-        return false;
-      },
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
+    return AmbientBackground(
+      child: WillPopScope(
+        onWillPop: () async {
+          Navigator.pushReplacementNamed(context, "/homePage");
+          return false;
+        },
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-            onPressed: () => Navigator.pushReplacementNamed(context, "/homePage"),
+          extendBodyBehindAppBar: true,
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(70),
+            child: PremiumSurface(
+              borderRadius: 0,
+              child: SafeArea(
+                bottom: false,
+                child: AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: Obx(() => IconButton(
+                    icon: Icon(Icons.arrow_back_ios_new, color: themeController.text),
+                    onPressed: () => Navigator.pushReplacementNamed(context, "/homePage"),
+                  )),
+                  title: Obx(() => Text(
+                    "V.O.I.D. SYSTEM",
+                    style: TextStyle(color: themeController.primary, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 2),
+                  )),
+                  centerTitle: true,
+                ),
+              ),
+            ),
           ),
-          title: const Text(
-            "V.O.I.D. SYSTEM",
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 2),
-          ),
-          centerTitle: true,
-        ),
-        body: BlocConsumer<ChatBloc, ChatState>(
-          bloc: chatBloc,
-          listener: (context, state) {
-            if (state is ChatSuccessState) {
-              _scrollToBottom();
-            }
-          },
-          builder: (context, state) {
-            List<ChatMessageModel> message = [];
-            if (state is ChatSuccessState) {
-              message = state.messages;
-            }
+          body: BlocConsumer<ChatBloc, ChatState>(
+            bloc: chatBloc,
+            listener: (context, state) {
+              if (state is ChatSuccessState) {
+                _scrollToBottom();
+              }
+            },
+            builder: (context, state) {
+              List<ChatMessageModel> message = [];
+              if (state is ChatSuccessState) {
+                message = state.messages;
+              }
 
-            return Stack(
-              children: [
-                // Background Image
-                Container(
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(AssetsImage.aiEarth),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                // Dynamic Blur Overlay
-                BackdropFilter(
-                  filter: ImageFilter.blur(
-                      sigmaX: _isKeyboardVisible ? 10.0 : 4.0,
-                      sigmaY: _isKeyboardVisible ? 10.0 : 4.0
-                  ),
-                  child: Container(
-                    color: Colors.black.withOpacity(_isKeyboardVisible ? 0.6 : 0.4),
-                  ),
-                ),
-                SafeArea(
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                          itemCount: message.length,
-                          itemBuilder: (context, index) {
-                            bool isUserMessage = message[index].role == 'user';
-                            return Align(
-                              alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
-                              child: Container(
-                                constraints: BoxConstraints(
-                                  maxWidth: MediaQuery.of(context).size.width * 0.8,
-                                ),
-                                margin: const EdgeInsets.only(bottom: 12),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: const Radius.circular(20),
-                                    topRight: const Radius.circular(20),
-                                    bottomLeft: isUserMessage ? const Radius.circular(20) : const Radius.circular(5),
-                                    bottomRight: isUserMessage ? const Radius.circular(5) : const Radius.circular(20),
+              return Stack(
+                children: [
+                  SafeArea(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.only(top: 20, left: 16, right: 16, bottom: 20),
+                            itemCount: message.length,
+                            itemBuilder: (context, index) {
+                              bool isUserMessage = message[index].role == 'user';
+
+                              return Obx(() {
+                                Color bubbleColor = isUserMessage ? themeController.primary : themeController.surface;
+                                Color fontColor = isUserMessage ? Colors.white : themeController.text;
+
+                                BorderRadius bubbleRadius = BorderRadius.only(
+                                  topLeft: const Radius.circular(20),
+                                  topRight: const Radius.circular(20),
+                                  bottomLeft: isUserMessage ? const Radius.circular(20) : const Radius.circular(5),
+                                  bottomRight: isUserMessage ? const Radius.circular(5) : const Radius.circular(20),
+                                );
+
+                                Widget content = AnimatedContainer(
+                                  duration: const Duration(milliseconds: 500),
+                                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    color: themeController.isGlass ? bubbleColor.withAlpha(isUserMessage ? 220 : 150) : bubbleColor,
+                                    borderRadius: bubbleRadius,
+                                    border: themeController.isGlass
+                                        ? Border.all(color: Colors.white.withAlpha(themeController.isDark ? 20 : 100), width: 1)
+                                        : null,
+                                    boxShadow: themeController.isGlass ? null : [
+                                      BoxShadow(color: themeController.isDark ? Colors.black.withAlpha(150) : Colors.black.withAlpha(15), blurRadius: 8, offset: const Offset(2, 4))
+                                    ],
                                   ),
-                                  child: BackdropFilter(
-                                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: isUserMessage
-                                            ? Theme.of(context).colorScheme.primary.withOpacity(0.8)
-                                            : Colors.white.withOpacity(0.15),
-                                        border: Border.all(
-                                          color: isUserMessage ? Colors.transparent : Colors.white.withOpacity(0.2),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
-                                      child: Text(
-                                        message[index].parts[0].text,
-                                        style: TextStyle(
-                                          color: isUserMessage ? Colors.black87 : Colors.white,
-                                          fontSize: 16,
-                                          height: 1.4,
-                                        ),
-                                      ),
-                                    ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+                                    child: Text(message[index].parts[0].text, style: TextStyle(color: fontColor, fontSize: 16, height: 1.4)),
                                   ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      if (chatBloc.generating)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          child: Row(
-                            children: [
-                              SizedBox(height: 40, width: 40, child: Lottie.asset('assets/loader.json')),
-                              const SizedBox(width: 15),
-                              Text("V.O.I.D. is processing...", style: TextStyle(color: Colors.white.withOpacity(0.7))),
-                            ],
+                                );
+
+                                return Align(
+                                  alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
+                                  child: themeController.isGlass
+                                      ? ClipRRect(
+                                    borderRadius: bubbleRadius,
+                                    child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15), child: content),
+                                  )
+                                      : content,
+                                );
+                              });
+                            },
                           ),
                         ),
-                      // Sci-Fi Input Console
-                      ClipRRect(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
-                            ),
+                        if (chatBloc.generating)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             child: Row(
                               children: [
-                                Expanded(
+                                SizedBox(height: 40, width: 40, child: Lottie.asset('assets/loader.json')),
+                                const SizedBox(width: 15),
+                                Obx(() => Text("V.O.I.D. is processing...", style: TextStyle(color: themeController.primary))),
+                              ],
+                            ),
+                          ),
+
+                        // Input Console
+                        PremiumSurface(
+                          borderRadius: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Obx(() => Container(
+                                  decoration: BoxDecoration(
+                                    color: themeController.surface.withAlpha(themeController.isGlass ? 150 : 255),
+                                    borderRadius: BorderRadius.circular(30),
+                                    border: Border.all(color: themeController.primary.withAlpha(50)),
+                                  ),
                                   child: TextField(
                                     controller: textEditingController,
-                                    style: const TextStyle(color: Colors.white),
-                                    cursorColor: Theme.of(context).colorScheme.primary,
+                                    style: TextStyle(color: themeController.text),
+                                    cursorColor: themeController.primary,
                                     maxLines: 4,
                                     minLines: 1,
                                     decoration: InputDecoration(
                                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                                       hintText: "Initialize prompt...",
-                                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      fillColor: Colors.white.withOpacity(0.1),
-                                      filled: true,
+                                      hintStyle: TextStyle(color: themeController.subText),
+                                      border: InputBorder.none,
+                                      fillColor: Colors.transparent,
                                     ),
                                   ),
+                                )),
+                              ),
+                              const SizedBox(width: 12),
+                              Obx(() => Container(
+                                decoration: BoxDecoration(
+                                    color: themeController.primary,
+                                    shape: BoxShape.circle,
+                                    boxShadow: themeController.isGlass ? [] : [
+                                      BoxShadow(color: themeController.primary.withAlpha(100), blurRadius: 10, offset: const Offset(0, 4))
+                                    ]
                                 ),
-                                const SizedBox(width: 12),
-                                Container(
-                                  decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-                                          blurRadius: 10,
-                                          spreadRadius: 1,
-                                        )
-                                      ]
-                                  ),
-                                  child: IconButton(
-                                    icon: const Icon(Icons.send, color: Colors.black87),
-                                    onPressed: () {
-                                      if (textEditingController.text.trim().isNotEmpty) {
-                                        chatBloc.add(ChatGenerateNewTextMessageEvent(inputMessage: textEditingController.text));
-                                        textEditingController.clear();
-                                        _scrollToBottom();
-                                      }
-                                    },
-                                  ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.send, color: Colors.white),
+                                  onPressed: () {
+                                    if (textEditingController.text.trim().isNotEmpty) {
+                                      chatBloc.add(ChatGenerateNewTextMessageEvent(inputMessage: textEditingController.text));
+                                      textEditingController.clear();
+                                      _scrollToBottom();
+                                    }
+                                  },
                                 ),
-                              ],
-                            ),
+                              )),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

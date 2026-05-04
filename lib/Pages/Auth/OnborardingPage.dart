@@ -1,11 +1,12 @@
-// File: Pages/Auth/OnboardingPage.dart
-
-import 'dart:ui';
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/AuthController.dart';
 import 'package:chatting/Controller/ImagePickerController.dart';
+import 'package:chatting/Widgets/AmbientBackground.dart';
+import 'package:chatting/Widgets/PremiumSurface.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../Controller/ThemeController.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -18,8 +19,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   final AuthController authController = Get.find<AuthController>();
   final ImagePickerController imagePickerController = Get.put(ImagePickerController());
+  final ThemeController themeController = Get.find<ThemeController>();
 
-  // Form State
   int _currentPage = 0;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController aboutController = TextEditingController();
@@ -27,11 +28,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   void _nextPage() {
     if (_currentPage == 0 && nameController.text.trim().isEmpty) {
-      Get.snackbar("Hold up", "Please enter your name to continue.");
+      Get.snackbar("Hold up", "Please enter your name to continue.", backgroundColor: Colors.redAccent.withAlpha(200), colorText: Colors.white);
       return;
     }
     if (_currentPage < 2) {
-      _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _pageController.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutQuart);
     } else {
       _submitProfile();
     }
@@ -39,7 +40,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   void _prevPage() {
     if (_currentPage > 0) {
-      _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _pageController.previousPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutQuart);
     }
   }
 
@@ -56,94 +57,77 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Stack(
+    return AmbientBackground(
+      child: Column(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(image: AssetImage(AssetsImage.aiEarth), fit: BoxFit.cover),
+          // Progress Indicator
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Row(
+              children: List.generate(3, (index) {
+                return Expanded(
+                  child: Obx(() => AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: _currentPage >= index ? themeController.primary : themeController.subText.withAlpha(50),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  )),
+                );
+              }),
             ),
           ),
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 25.0, sigmaY: 25.0),
-            child: Container(color: Colors.black.withOpacity(0.85)),
-          ),
-          SafeArea(
-            child: Column(
+
+          // Pages
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              onPageChanged: (index) => setState(() => _currentPage = index),
               children: [
-                // Progress Indicator
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  child: Row(
-                    children: List.generate(3, (index) {
-                      return Expanded(
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: _currentPage >= index ? Theme.of(context).colorScheme.primary : Colors.white24,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-
-                // Pages
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(), // Disable swipe, force button use
-                    onPageChanged: (index) => setState(() => _currentPage = index),
-                    children: [
-                      _buildProfileSetup(),
-                      _buildTnc(),
-                      _buildReview(),
-                    ],
-                  ),
-                ),
-
-                // Bottom Navigation Bar
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (_currentPage > 0)
-                        TextButton(
-                          onPressed: _prevPage,
-                          child: const Text("Back", style: TextStyle(color: Colors.white70, fontSize: 16)),
-                        )
-                      else
-                        const SizedBox(width: 60), // Spacer
-
-                      Obx(() => authController.isLoading.value
-                          ? const CircularProgressIndicator()
-                          : ElevatedButton(
-                        onPressed: _nextPage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                        ),
-                        child: Text(
-                          _currentPage == 2 ? "Launch SAMPARK" : "Next",
-                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      )),
-                    ],
-                  ),
-                )
+                _buildProfileSetup(),
+                _buildTnc(),
+                _buildReview(),
               ],
             ),
           ),
+
+          // Bottom Navigation Bar
+          Obx(() => PremiumSurface(
+            borderRadius: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (_currentPage > 0)
+                  TextButton(
+                    onPressed: _prevPage,
+                    child: Text("Back", style: TextStyle(color: themeController.subText, fontSize: 16)),
+                  )
+                else
+                  const SizedBox(width: 60),
+
+                authController.isLoading.value
+                    ? CircularProgressIndicator(color: themeController.primary)
+                    : ElevatedButton(
+                  onPressed: _nextPage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeController.primary,
+                    foregroundColor: Colors.white,
+                    elevation: themeController.isGlass ? 0 : 4,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  ),
+                  child: Text(
+                    _currentPage == 2 ? "Launch SAMPARK" : "Next",
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1.1),
+                  ),
+                ),
+              ],
+            ),
+          )),
         ],
       ),
     );
@@ -156,9 +140,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Setup Profile", style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+          Obx(() => Text("Setup Profile", style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: themeController.text))),
           const SizedBox(height: 10),
-          Text("How should people recognize you?", style: TextStyle(color: Colors.white.withOpacity(0.6))),
+          Obx(() => Text("How should people recognize you?", style: TextStyle(color: themeController.subText))),
           const SizedBox(height: 40),
 
           GestureDetector(
@@ -166,34 +150,37 @@ class _OnboardingPageState extends State<OnboardingPage> {
               String? url = await imagePickerController.pickAndUploadImage();
               if (url != null) profileImageUrl.value = url;
             },
-            child: Obx(() => Container(
-              height: 120,
-              width: 120,
+            child: Obx(() => AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              height: 130,
+              width: 130,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: themeController.surface,
                 shape: BoxShape.circle,
-                border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
-                boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), blurRadius: 20)],
+                border: Border.all(color: themeController.primary.withAlpha(150), width: 2),
+                boxShadow: themeController.isGlass ? [] : [
+                  BoxShadow(color: themeController.primary.withAlpha(50), blurRadius: 20)
+                ],
               ),
               child: imagePickerController.isUploading.value
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Center(child: CircularProgressIndicator(color: themeController.primary))
                   : profileImageUrl.value.isNotEmpty
-                  ? ClipRRect(borderRadius: BorderRadius.circular(60), child: Image.network(profileImageUrl.value, fit: BoxFit.cover))
-                  : const Column(
+                  ? ClipRRect(borderRadius: BorderRadius.circular(65), child: Image.network(profileImageUrl.value, fit: BoxFit.cover))
+                  : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt, color: Colors.white54, size: 30),
-                  SizedBox(height: 4),
-                  Text("Add Photo", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  Icon(Icons.camera_alt, color: themeController.subText, size: 30),
+                  const SizedBox(height: 4),
+                  Text("Add Photo", style: TextStyle(color: themeController.subText, fontSize: 12)),
                 ],
               ),
             )),
           ),
           const SizedBox(height: 40),
 
-          _buildGlassInput("Display Name", Icons.person, nameController),
+          _buildPremiumInput("Display Name", Icons.person, nameController),
           const SizedBox(height: 16),
-          _buildGlassInput("About (Optional)", Icons.info_outline, aboutController),
+          _buildPremiumInput("About (Optional)", Icons.info_outline, aboutController),
         ],
       ),
     );
@@ -207,18 +194,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          Text("Legal Terms", style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+          Obx(() => Text("Legal Terms", style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: themeController.text))),
           const SizedBox(height: 10),
-          Text("Please review our terms of service.", style: TextStyle(color: Colors.white.withOpacity(0.6))),
+          Obx(() => Text("Please review our terms of service.", style: TextStyle(color: themeController.subText))),
           const SizedBox(height: 20),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.white10),
-              ),
+            child: PremiumSurface(
+              padding: const EdgeInsets.all(24),
               child: const SingleChildScrollView(
                 child: Text(
                   """Welcome to SAMPARK. 
@@ -238,7 +220,7 @@ Interactions with our AI assistant, V.O.I.D., may be processed to improve intell
 We reserve the right to suspend or terminate your account if you violate these terms.
 
 By clicking "Next", you acknowledge that you have read and understood these terms.""",
-                  style: TextStyle(color: Colors.white70, height: 1.6),
+                  style: TextStyle(height: 1.6, fontSize: 14),
                 ),
               ),
             ),
@@ -256,20 +238,15 @@ By clicking "Next", you acknowledge that you have read and understood these term
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.check_circle_outline, size: 80, color: Colors.greenAccent),
+          Obx(() => Icon(Icons.check_circle_outline, size: 80, color: themeController.primary)),
           const SizedBox(height: 20),
-          Text("All Set!", style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+          Obx(() => Text("All Set!", style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: themeController.text))),
           const SizedBox(height: 10),
-          Text("Review your details before launching.", style: TextStyle(color: Colors.white.withOpacity(0.6))),
+          Obx(() => Text("Review your details before launching.", style: TextStyle(color: themeController.subText))),
           const SizedBox(height: 40),
 
-          Container(
+          PremiumSurface(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
-            ),
             child: Row(
               children: [
                 Obx(() => CircleAvatar(
@@ -278,16 +255,16 @@ By clicking "Next", you acknowledge that you have read and understood these term
                 )),
                 const SizedBox(width: 20),
                 Expanded(
-                  child: Column(
+                  child: Obx(() => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(nameController.text.trim(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text(nameController.text.trim(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: themeController.text)),
                       const SizedBox(height: 4),
-                      Text(authController.enteredPhoneNumber, style: const TextStyle(fontSize: 14, color: Colors.white54)),
+                      Text(authController.enteredPhoneNumber, style: TextStyle(fontSize: 14, color: themeController.subText)),
                       const SizedBox(height: 4),
-                      Text(aboutController.text.trim().isEmpty ? "Available" : aboutController.text.trim(), style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.primary)),
+                      Text(aboutController.text.trim().isEmpty ? "Available" : aboutController.text.trim(), style: TextStyle(fontSize: 14, color: themeController.primary)),
                     ],
-                  ),
+                  )),
                 ),
               ],
             ),
@@ -297,24 +274,23 @@ By clicking "Next", you acknowledge that you have read and understood these term
     );
   }
 
-  Widget _buildGlassInput(String hint, IconData icon, TextEditingController controller) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: TextField(
+  Widget _buildPremiumInput(String hint, IconData icon, TextEditingController controller) {
+    return PremiumSurface(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Obx(() => TextField(
         controller: controller,
-        style: const TextStyle(color: Colors.white),
+        style: TextStyle(color: themeController.text),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.white24),
-          prefixIcon: Icon(icon, color: Colors.white54),
+          hintStyle: TextStyle(color: themeController.subText.withAlpha(125)),
+          prefixIcon: Icon(icon, color: themeController.subText),
           border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          fillColor: Colors.transparent,
           contentPadding: const EdgeInsets.symmetric(vertical: 18),
         ),
-      ),
+      )),
     );
   }
 }

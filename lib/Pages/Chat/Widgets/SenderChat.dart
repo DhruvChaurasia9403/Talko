@@ -1,15 +1,16 @@
-// File: Pages/Chat/Widgets/SenderChat.dart
-
+import 'dart:ui';
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ChatController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
-import 'package:chatting/Pages/Chat/Widgets/VideoPlayerItem.dart'; // <-- NEW IMPORT
+import 'package:chatting/Pages/Chat/Widgets/VideoPlayerItem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+
+import '../../../Controller/ThemeController.dart';
 
 class SenderChat extends StatelessWidget {
   final String? sms;
@@ -40,22 +41,126 @@ class SenderChat extends StatelessWidget {
     }
 
     final chatController = Get.find<ChatController>();
+    final themeController = Get.find<ThemeController>();
     final isVoid = senderId == "VOID";
     final isMe = senderId == Get.find<ProfileController>().currentUser.value.id;
-
-    final bubbleColor = isVoid
-        ? Colors.black87
-        : (isMe ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primaryContainer);
-
-    final textColor = isVoid
-        ? Theme.of(context).colorScheme.primary
-        : (isMe ? Colors.black87 : Colors.white);
-
-    // --- NEW: Detect if media is a video ---
     final bool isVideo = imageUrl != null && (imageUrl!.toLowerCase().contains('.mp4') || imageUrl!.toLowerCase().contains('.mov'));
 
     return Obx(() {
       bool isSelected = chatController.selectedMessageIds.contains(messageId);
+
+      // Dynamic Color Assignment
+      Color bubbleColor;
+      Color fontColor;
+
+      if (isVoid) {
+        bubbleColor = themeController.isDark ? Colors.black87 : Colors.grey.shade900;
+        fontColor = themeController.primary;
+      } else if (isMe) {
+        bubbleColor = themeController.primary;
+        fontColor = Colors.white;
+      } else {
+        bubbleColor = themeController.surface;
+        fontColor = themeController.text;
+      }
+
+      // Asymmetrical Border Radius
+      BorderRadius borderRadius = BorderRadius.only(
+        topLeft: const Radius.circular(20),
+        topRight: const Radius.circular(20),
+        bottomLeft: isVoid ? const Radius.circular(20) : (isMe ? const Radius.circular(20) : const Radius.circular(4)),
+        bottomRight: isVoid ? const Radius.circular(20) : (isMe ? const Radius.circular(4) : const Radius.circular(20)),
+      );
+
+      Widget chatBubble = AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * (isVoid ? 0.9 : 0.75)),
+        decoration: BoxDecoration(
+          color: themeController.isGlass
+              ? bubbleColor.withAlpha(isMe ? 220 : 150)
+              : bubbleColor,
+          borderRadius: borderRadius,
+          border: themeController.isGlass
+              ? Border.all(color: Colors.white.withAlpha(themeController.isDark ? 20 : 100), width: 1)
+              : null,
+          boxShadow: themeController.isGlass ? null : [
+            BoxShadow(
+              color: themeController.isDark ? Colors.black.withAlpha(150) : Colors.black.withAlpha(15),
+              blurRadius: 8,
+              offset: const Offset(2, 4),
+            )
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: isVoid ? CrossAxisAlignment.center : (isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start),
+            children: [
+              if (isVoid)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.smart_toy, size: 14, color: themeController.primary),
+                      const SizedBox(width: 6),
+                      Text("V.O.I.D. SYSTEM", style: TextStyle(color: themeController.primary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2))
+                    ],
+                  ),
+                ),
+
+              if (imageUrl != null && imageUrl!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: isVideo
+                      ? VideoPlayerItem(videoUrl: imageUrl!)
+                      : ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(imageUrl!, fit: BoxFit.cover),
+                  ),
+                ),
+
+              if (sms != null && sms!.isNotEmpty)
+                Text(
+                  sms!,
+                  textAlign: isVoid ? TextAlign.center : TextAlign.start,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: fontColor),
+                ),
+
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (timestamp != null)
+                    Text(
+                      DateFormat('hh:mm a').format(timestamp!),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: isMe ? fontColor.withAlpha(200) : themeController.subText,
+                        fontSize: 10,
+                      ),
+                    ),
+                  if (isMe) ...[
+                    const SizedBox(width: 6),
+                    if (status == MessageStatus.unknown)
+                      Icon(Icons.access_time, size: 12, color: fontColor.withAlpha(200))
+                    else
+                      SvgPicture.asset(
+                        status == MessageStatus.read ? AssetsImage.doubleBlueTickSVG :
+                        status == MessageStatus.delivered ? AssetsImage.doubleTickSVG :
+                        status == MessageStatus.sent ? AssetsImage.singleTickSVG : AssetsImage.errorSVG,
+                        height: 12, width: 12,
+                        colorFilter: status != MessageStatus.read
+                            ? ColorFilter.mode(fontColor.withAlpha(200), BlendMode.srcIn)
+                            : null,
+                      ),
+                  ]
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
 
       return GestureDetector(
         onLongPress: () {
@@ -63,14 +168,12 @@ class SenderChat extends StatelessWidget {
           chatController.toggleMessageSelection(messageId);
         },
         onTap: () {
-          if (chatController.selectedMessageIds.isNotEmpty) {
-            chatController.toggleMessageSelection(messageId);
-          }
+          if (chatController.selectedMessageIds.isNotEmpty) chatController.toggleMessageSelection(messageId);
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.symmetric(vertical: 4),
-          color: isSelected ? Theme.of(context).colorScheme.secondary.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? themeController.primary.withAlpha(50) : Colors.transparent,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
@@ -83,123 +186,23 @@ class SenderChat extends StatelessWidget {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      Container(
-                        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * (isVoid ? 0.9 : 0.75)),
-                        decoration: BoxDecoration(
-                          color: bubbleColor,
-                          border: isVoid ? Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5), width: 1) : null,
-                          boxShadow: [
-                            BoxShadow(
-                              color: isVoid ? Theme.of(context).colorScheme.primary.withOpacity(0.2) : Colors.black.withOpacity(0.1),
-                              blurRadius: isVoid ? 10 : 5,
-                              offset: const Offset(0, 2),
-                            )
-                          ],
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(18),
-                            topRight: const Radius.circular(18),
-                            bottomLeft: isVoid ? const Radius.circular(18) : (isMe ? const Radius.circular(18) : const Radius.circular(4)),
-                            bottomRight: isVoid ? const Radius.circular(18) : (isMe ? const Radius.circular(4) : const Radius.circular(18)),
-                          ),
+                      // Apply deep blur if glassmorphism is active
+                      themeController.isGlass ? ClipRRect(
+                        borderRadius: borderRadius,
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                          child: chatBubble,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 14.0),
-                          child: Column(
-                            crossAxisAlignment: isVoid ? CrossAxisAlignment.center : (isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start),
-                            children: [
-                              if (isVoid)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 6.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.smart_toy, size: 14, color: Theme.of(context).colorScheme.primary),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "V.O.I.D. SYSTEM",
-                                        style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-                                      )
-                                    ],
-                                  ),
-                                ),
-
-                              // --- NEW: RENDER VIDEO OR IMAGE ---
-                              if (imageUrl != null && imageUrl!.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: isVideo
-                                      ? VideoPlayerItem(videoUrl: imageUrl!)
-                                      : ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(imageUrl!, fit: BoxFit.cover),
-                                  ),
-                                ),
-                              // ----------------------------------
-
-                              if (sms != null && sms!.isNotEmpty)
-                                Text(
-                                  sms!,
-                                  textAlign: isVoid ? TextAlign.center : TextAlign.start,
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: textColor,
-                                  ),
-                                ),
-
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  if (timestamp != null)
-                                    Text(
-                                      DateFormat('hh:mm a').format(timestamp!),
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        color: isMe ? Colors.black54 : Colors.white60,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  if (isMe) ...[
-                                    const SizedBox(width: 4),
-                                    // --- WORLD CLASS UI: THE PENDING CLOCK ---
-                                    if (status == MessageStatus.unknown)
-                                      const Icon(Icons.access_time, size: 12, color: Colors.white54)
-                                    else
-                                      SvgPicture.asset(
-                                        status == MessageStatus.read
-                                            ? AssetsImage.doubleBlueTickSVG
-                                            : status == MessageStatus.delivered
-                                            ? AssetsImage.doubleTickSVG
-                                            : status == MessageStatus.sent
-                                            ? AssetsImage.singleTickSVG
-                                            : AssetsImage.errorSVG,
-                                        height: 12,
-                                        width: 12,
-                                        colorFilter: status != MessageStatus.read
-                                            ? const ColorFilter.mode(Colors.white70, BlendMode.srcIn)
-                                            : null,
-                                      ),
-                                    // -----------------------------------------
-                                  ]
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      ) : chatBubble,
 
                       if (isSelected)
                         Positioned(
-                          left: isMe ? -10 : null,
-                          right: !isMe ? -10 : null,
-                          top: 0,
-                          bottom: 0,
+                          left: isMe ? -10 : null, right: !isMe ? -10 : null,
+                          top: 0, bottom: 0,
                           child: Center(
                             child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.blueAccent,
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(color: themeController.primary, shape: BoxShape.circle),
+                              padding: const EdgeInsets.all(6),
                               child: const Icon(Icons.check, color: Colors.white, size: 16),
                             ),
                           ),
