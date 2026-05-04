@@ -6,6 +6,7 @@ buildscript {
     dependencies {
         classpath 'com.google.gms:google-services:4.4.2'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0'
+        classpath 'com.android.tools.build:gradle:8.9.1'
     }
 }
 
@@ -20,12 +21,25 @@ rootProject.buildDir = "../build"
 
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
 
-subprojects {
+    // --- THE BULLETPROOF NAMESPACE FIX ---
+    def configureNamespace = { p ->
+        if (p.hasProperty('android') && p.android.namespace == null) {
+            p.android.namespace = p.group
+        }
+    }
+
+    if (project.state.executed) {
+        configureNamespace(project) // If already evaluated, do it immediately
+    } else {
+        project.afterEvaluate { p ->
+            configureNamespace(p) // If not, wait for it to finish
+        }
+    }
+    // -------------------------------------
+
     project.evaluationDependsOn(":app")
 }
-
 
 gradle.ext.kotlin_mpp_enable_compatibility_metadata_variant = false
 

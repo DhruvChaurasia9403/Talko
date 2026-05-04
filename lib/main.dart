@@ -7,7 +7,7 @@ import 'package:chatting/Pages/Splash/SplashPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart'; // <-- ADD THIS
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -15,58 +15,43 @@ import 'package:get/get.dart';
 import 'Model/UserModel.dart';
 import 'Pages/Chat/chatPage.dart';
 
-// --- ADD THIS FUNCTION ---
-// This *must* be a top-level function (not inside any class)
-// This handles notifications when the app is TERMINATED (fully closed)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background,
-  // make sure you call initializeApp first
   await Firebase.initializeApp();
-  print("Handling a background message: ${message.messageId}");
 }
-// --- END OF NEW FUNCTION ---
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await FirebaseAppCheck.instance.activate(
-    // Use the debug provider for testing
-    androidProvider: AndroidProvider.debug,
-  );
 
-  // --- ADD THIS LINE ---
-  // This sets the handler for background/terminated messages
+  try {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.debug,
+    );
+  } catch (e) {
+    print(e);
+  }
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  // ---------------------
 
-  // Initialize FlutterLocalNotificationsPlugin
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  // Initialize NotificationController (this will now create our channel)
-  final NotificationController notificationController =
-  NotificationController(flutterLocalNotificationsPlugin);
+  final NotificationController notificationController = NotificationController(flutterLocalNotificationsPlugin);
 
-  // Register NotificationController globally
   Get.put(notificationController);
 
-  // Register ChatController globally and pass NotificationController
   Get.put(ChatController(notificationController));
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-    print("Notification tapped! Routing to chat...");
 
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
     if (message.data.containsKey('senderId')) {
       String senderId = message.data['senderId'];
 
-      // Fetch the user data from Firestore
       var userDoc = await FirebaseFirestore.instance.collection('users').doc(senderId).get();
 
       if (userDoc.exists) {
         UserModel senderUser = UserModel.fromJson(userDoc.data()!);
 
-        // Use GetX to navigate directly to the chat page
-        Get.toNamed('/homePage'); // Ensure home is in the backstack
+        Get.toNamed('/homePage');
         Get.to(() => chatPage(userModel: senderUser));
       }
     }
@@ -87,11 +72,9 @@ class MyApp extends StatelessWidget {
       getPages: pagePath,
       darkTheme: darkTheme,
       themeMode: ThemeMode.dark,
-
       translations: AppLocalization(),
       locale: const Locale('en', 'US'),
       fallbackLocale: const Locale('en', 'US'),
-
       home: const Splashpage(),
     );
   }

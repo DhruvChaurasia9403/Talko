@@ -1,3 +1,5 @@
+// File: Controller/ProfileController.dart
+
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,7 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
-import 'dart:convert'; // For JSON parsing
+import 'dart:convert';
+import '../Model/LocalMessageModel.dart';
+import 'DBController.dart'; // <-- Needed for Isar wipe
 
 class ProfileController extends GetxController {
   final auth = FirebaseAuth.instance;
@@ -15,43 +19,33 @@ class ProfileController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    print("Initializing ProfileController...");
     if (auth.currentUser != null) {
-      print("Authenticated User: ${auth.currentUser!.uid}");
-      await getUserDetails(); // Ensure this completes before proceeding
-      updateOnlineStatus(true); // Set user as online
-    } else {
-      print("User not authenticated.");
+      await getUserDetails();
+      updateOnlineStatus(true);
     }
   }
 
   @override
   void onClose() {
     super.onClose();
-    updateOnlineStatus(false); // Set user as offline
+    updateOnlineStatus(false);
   }
 
-  // Fetch user details from Firestore
   Future<void> getUserDetails() async {
     try {
-      print("Fetching user details...");
       DocumentSnapshot<Map<String, dynamic>> userDoc = await db
           .collection('users')
           .doc(auth.currentUser!.uid)
           .get();
 
       if (userDoc.exists) {
-        print("User data: ${userDoc.data()}"); // Debug: Check fetched data
         currentUser.value = UserModel.fromJson(userDoc.data()!);
-      } else {
-        print("No document found for the user.");
       }
     } catch (e) {
       print("Error fetching user details: $e");
     }
   }
 
-  // Update user's online status
   void updateOnlineStatus(bool isOnline) {
     if (auth.currentUser != null) {
       db.collection('users').doc(auth.currentUser!.uid).update({
@@ -61,14 +55,12 @@ class ProfileController extends GetxController {
     }
   }
 
-  // Upload Image to Cloudinary and return the image URL
   Future<String?> uploadImageToCloudinary(String imagePath) async {
     try {
-      const cloudName = "dgsxsujn9"; // Replace with your Cloudinary cloud name
+      const cloudName = "dgsxsujn9";
       const uploadPreset = "profile_upload_unsigned";
 
       final url = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/upload");
-
       final request = http.MultipartRequest('POST', url);
       request.fields['upload_preset'] = uploadPreset;
       request.files.add(await http.MultipartFile.fromPath('file', imagePath));
@@ -77,19 +69,16 @@ class ProfileController extends GetxController {
 
       if (response.statusCode == 200) {
         final res = await response.stream.bytesToString();
-        final responseData = json.decode(res); // Parse the JSON response
-        return responseData['secure_url']; // Extract and return the URL
-      } else {
-        print("Image upload failed: ${response.reasonPhrase}");
-        return null;
+        final responseData = json.decode(res);
+        return responseData['secure_url'];
       }
+      return null;
     } catch (e) {
       print("Error uploading image to Cloudinary: $e");
       return null;
     }
   }
 
-  // Update user profile in Firebase
   Future<void> updateUserProfile({
     required String imageUrl,
     required String name,
@@ -99,7 +88,7 @@ class ProfileController extends GetxController {
     try {
       final userId = auth.currentUser!.uid;
       final previousImageUrl = currentUser.value.profileImage;
-      const defaultImageUrl = AssetsImage.defaultPic; // Replace with your actual default image URL
+      const defaultImageUrl = AssetsImage.defaultPic;
 
       await db.collection('users').doc(userId).update({
         "profileImage": imageUrl,
@@ -108,13 +97,11 @@ class ProfileController extends GetxController {
         "phoneNumber": phoneNumber,
       });
 
-      // Update local state
       currentUser.value.name = name;
       currentUser.value.about = about;
       currentUser.value.profileImage = imageUrl;
       currentUser.value.phoneNumber = phoneNumber;
 
-      // Delete the previous image from Cloudinary if it's not the default one
       if (previousImageUrl != null &&
           previousImageUrl.isNotEmpty &&
           previousImageUrl != defaultImageUrl) {
@@ -125,22 +112,15 @@ class ProfileController extends GetxController {
     }
   }
 
-
-  // Call our secure backend to delete the image
   Future<void> deleteImageFromCloudinary(String imageUrl) async {
     try {
-      // Make sure this matches your actual Render URL
       final url = Uri.parse("https://chatting-server-17pa.onrender.com/deleteImage");
-
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'imageUrl': imageUrl}),
       );
-
-      if (response.statusCode == 200) {
-        print("Image deleted successfully via secure server.");
-      } else {
+      if (response.statusCode != 200) {
         print("Failed to delete image: ${response.body}");
       }
     } catch (e) {
@@ -148,7 +128,6 @@ class ProfileController extends GetxController {
     }
   }
 
-  // Method to generate signature for Cloudinary API request
   String generateSignature(String publicId, String apiSecret) {
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
     final signatureString = "public_id=$publicId&timestamp=$timestamp$apiSecret";
@@ -157,6 +136,15 @@ class ProfileController extends GetxController {
 
   Future<void> signOut() async {
     try {
+      // --- CRITICAL FIX: WIPE ISAR ON LOGOUT ---
+      // This prevents Dragon from seeing Dhruv's local messages on the same device!
+      if (Get.isRegistered<DBcontroller>()) {
+        final dbController = Get.find<DBcontroller>();
+        await dbController.isar.writeTxn(() async {
+          await dbController.isar.localMessageModels.clear();
+        });
+      }
+      // -----------------------------------------
       await auth.signOut();
       print("User signed out successfully");
     } catch (e) {

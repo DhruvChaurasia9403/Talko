@@ -1,52 +1,29 @@
 // File: Pages/Contact/Widgets/ContactSearch.dart
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class ContactSearch extends StatelessWidget {
-  const ContactSearch({super.key});
+  final Function(String) onChanged; // <-- Add this callback
+
+  const ContactSearch({super.key, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    RxBool isFocused = false.obs;
-    final FocusNode _focusNode = FocusNode();
-
-    _focusNode.addListener(() {
-      isFocused.value = _focusNode.hasFocus;
-    });
-
-    return Obx(
-          () => Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isFocused.value
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface,
-          ),
-          color: isFocused.value
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 6.0),
-          child: TextField(
-            focusNode: _focusNode,
-            decoration: InputDecoration(
-              hintText: 'contactSearchHint'.tr, // <-- Changed
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: isFocused.value
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Theme.of(context).colorScheme.surface,
-            ),
-            onTap: () {
-            },
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+      ),
+      child: TextField(
+        onChanged: onChanged, // <-- Call it here
+        autofocus: true,
+        style: const TextStyle(color: Colors.white),
+        decoration: const InputDecoration(
+          hintText: 'Search contacts...',
+          prefixIcon: Icon(Icons.search, color: Colors.white54),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(vertical: 15),
         ),
       ),
     );

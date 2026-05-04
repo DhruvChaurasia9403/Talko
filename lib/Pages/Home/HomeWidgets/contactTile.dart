@@ -1,3 +1,5 @@
+// File: Pages/Home/HomeWidgets/contactTile.dart
+
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/DBController.dart';
 import 'package:chatting/Model/ChatRoomModel.dart';
@@ -19,52 +21,56 @@ class contactTile extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       }
 
-      // Filter logic now works on chat rooms
-      List<ChatRoomModel> filteredRooms = dbController.chatRoomList.where((room) {
-        // Determine who the *other* user in the chat is
-        UserModel otherUser = (room.sender?.id == dbController.auth.currentUser!.uid)
-            ? room.receiver!
-            : room.sender!;
+      String myUid = dbController.auth.currentUser!.uid;
 
-        // Search by the other user's name
-        return otherUser.name != null &&
-            otherUser.name!.toLowerCase().contains(searchQuery.toLowerCase());
+      // --- BULLETPROOF NULL-SAFETY ---
+      List<ChatRoomModel> filteredRooms = dbController.chatRoomList.where((room) {
+        UserModel otherUser;
+        if (room.sender != null && room.sender!.id == myUid) {
+          otherUser = room.receiver ?? UserModel(id: "unknown", name: "Unknown User");
+        } else if (room.receiver != null && room.receiver!.id == myUid) {
+          otherUser = room.sender ?? UserModel(id: "unknown", name: "Unknown User");
+        } else {
+          otherUser = room.sender ?? room.receiver ?? UserModel(id: "unknown", name: "Unknown User");
+        }
+
+        return otherUser.name != null && otherUser.name!.toLowerCase().contains(searchQuery.toLowerCase());
       }).toList();
 
       if (filteredRooms.isEmpty) {
-        return Center(child: Text("No chats found.")); // Handle empty state
+        return const Center(child: Text("No chats found.", style: TextStyle(color: Colors.white54)));
       }
 
       return ListView.builder(
+        // --- UI OVERLAP FIX: Push list down 140px to clear the AppBar ---
+        padding: const EdgeInsets.only(top: 165, bottom: 80),
         itemCount: filteredRooms.length,
         itemBuilder: (context, index) {
           final room = filteredRooms[index];
 
-          // Find the other user's details
+          // Safely determine the other user again
           UserModel otherUser;
-          // Check who sent the LAST message
-          if (room.sender?.id == dbController.auth.currentUser!.uid) {
-            otherUser = room.receiver!; // If I sent it, the other user is the receiver
+          if (room.sender != null && room.sender!.id == myUid) {
+            otherUser = room.receiver ?? UserModel(id: "unknown", name: "Unknown User");
+          } else if (room.receiver != null && room.receiver!.id == myUid) {
+            otherUser = room.sender ?? UserModel(id: "unknown", name: "Unknown User");
           } else {
-            otherUser = room.sender!; // Otherwise, the other user is the sender
+            otherUser = room.sender ?? room.receiver ?? UserModel(id: "unknown", name: "Unknown User");
           }
 
-          // --- Unread Logic ---
           String? unreadCount;
           int count = int.tryParse(room.unReadMessageNo ?? '0') ?? 0;
-          // Show count badge ONLY if I am the receiver and count > 0
-          if (room.receiver?.id == dbController.auth.currentUser!.uid && count > 0) {
+          if (count > 0 && room.lastMessageSenderId != myUid) {
             unreadCount = room.unReadMessageNo;
           }
-          // --- End Unread Logic ---
 
           return chatTile(
-            userModel: otherUser, // Pass otherUser to navigate to chatPage
+            userModel: otherUser,
             imageUrl: otherUser.profileImage ?? AssetsImage.defaultPic,
-            name: otherUser.name ?? 'contactDefaultName'.tr,
-            lastChat: room.lastMessage ?? "...",
-            lastSeen: "", // This field is no longer relevant, we use unreadCount
-            unreadCount: unreadCount, // <-- Pass the unread count
+            name: otherUser.name ?? 'Unknown',
+            lastChat: room.lastMessage ?? "Say hi!",
+            lastSeen: "",
+            unreadCount: unreadCount,
           );
         },
       );

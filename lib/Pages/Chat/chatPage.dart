@@ -5,6 +5,8 @@ import 'dart:ui';
 import 'package:chatting/Pages/Chat/Widgets/TypingIndicator.dart';
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ChatController.dart';
+import 'package:chatting/Controller/DBController.dart';
+import 'package:chatting/Controller/ImagePickerController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Model/UserModel.dart';
 import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
@@ -15,8 +17,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:isar/isar.dart';
 import '../../Model/ChatModel.dart';
 import '../../Model/ChatRoomModel.dart';
+import '../../Model/LocalMessageModel.dart';
 
 class chatPage extends StatefulWidget {
   final UserModel userModel;
@@ -30,6 +34,7 @@ class _chatPageState extends State<chatPage> {
   final ScrollController _scrollController = ScrollController();
   late ChatController chatController;
   late ProfileController profileController;
+  late ImagePickerController imagePickerController;
   final TextEditingController messageController = TextEditingController();
   Timer? _typingTimer;
 
@@ -37,9 +42,17 @@ class _chatPageState extends State<chatPage> {
   void initState() {
     super.initState();
     chatController = Get.find<ChatController>();
-    profileController = Get.find<ProfileController>();
-    chatController.clearSelection(); // Clear any phantom selections on load
+    profileController = Get.put(ProfileController());
+    imagePickerController = Get.put(ImagePickerController());
+    chatController.clearSelection();
+    chatController.resetMessageLimit();
     _resetUnreadCount();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels == _scrollController.position.minScrollExtent) {
+        chatController.loadMoreMessages();
+        HapticFeedback.lightImpact();
+      }
+    });
   }
 
   @override
@@ -68,9 +81,9 @@ class _chatPageState extends State<chatPage> {
       final roomRef = profileController.db.collection("chats").doc(roomId);
       final doc = await roomRef.get();
 
-      if (doc.exists) {
+      if (doc.exists && doc.data() != null) {
         ChatRoomModel room = ChatRoomModel.fromJson(doc.data()!);
-        if (room.receiver?.id == profileController.auth.currentUser!.uid) {
+        if (room.lastMessageSenderId != profileController.auth.currentUser!.uid) {
           await roomRef.update({'unReadMessageNo': '0'});
         }
       }
@@ -89,11 +102,85 @@ class _chatPageState extends State<chatPage> {
     }
   }
 
-  void _copySelectedMessages() {
-    // Collect all selected message texts (you could extend this logic)
-    Clipboard.setData(const ClipboardData(text: "Selected messages copied."));
-    Get.snackbar("Copied", "Messages copied to clipboard", snackPosition: SnackPosition.TOP);
-    chatController.clearSelection();
+  void _showAttachmentMenu() {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) {
+          return ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                  border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 5,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _attachmentIcon(Icons.image, "Photo", Colors.purpleAccent, () async {
+                          Navigator.pop(context);
+                          String? url = await imagePickerController.pickAndUploadImage();
+                          if (url != null) {
+                            chatController.sendMessage(widget.userModel.id!, "", widget.userModel, imageUrl: url);
+                          }
+                        }),
+                        _attachmentIcon(Icons.videocam, "Video", Colors.orangeAccent, () async {
+                          Navigator.pop(context);
+                          String? url = await imagePickerController.pickAndUploadVideo();
+                          if (url != null) {
+                            chatController.sendMessage(widget.userModel.id!, "", widget.userModel, imageUrl: url);
+                          }
+                        }),
+                        _attachmentIcon(Icons.gif_box, "GIF", Colors.greenAccent, () {
+                          Navigator.pop(context);
+                          chatController.sendMessage(widget.userModel.id!, "", widget.userModel, imageUrl: "https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif");
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+    );
+  }
+
+  Widget _attachmentIcon(IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withOpacity(0.5)),
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
   }
 
   @override
@@ -102,7 +189,7 @@ class _chatPageState extends State<chatPage> {
       onWillPop: () async {
         if (chatController.selectedMessageIds.isNotEmpty) {
           chatController.clearSelection();
-          return false; // Don't pop, just clear selection
+          return false;
         }
         return true;
       },
@@ -114,7 +201,6 @@ class _chatPageState extends State<chatPage> {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
               child: Obx(() {
-                // --- REACTIVE APP BAR ---
                 if (chatController.selectedMessageIds.isNotEmpty) {
                   return AppBar(
                     backgroundColor: Colors.blueAccent.withOpacity(0.9),
@@ -130,7 +216,21 @@ class _chatPageState extends State<chatPage> {
                     actions: [
                       IconButton(
                         icon: const Icon(Icons.copy, color: Colors.white),
-                        onPressed: _copySelectedMessages,
+                        onPressed: () async {
+                          final dbC = Get.find<DBcontroller>();
+                          var selectedLocal = await dbC.isar.localMessageModels
+                              .filter()
+                              .anyOf(chatController.selectedMessageIds, (q, String id) => q.firestoreMessageIdEqualTo(id))
+                              .findAll();
+
+                          String copyText = selectedLocal.map((m) => m.message).join('\n\n');
+
+                          if(copyText.isNotEmpty){
+                            Clipboard.setData(ClipboardData(text: copyText));
+                            Get.snackbar("Copied", "Text saved to clipboard");
+                          }
+                          chatController.clearSelection();
+                        },
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete_outline, color: Colors.white),
@@ -142,7 +242,6 @@ class _chatPageState extends State<chatPage> {
                   );
                 }
 
-                // Standard AppBar
                 return AppBar(
                   backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.7),
                   elevation: 0,
@@ -183,7 +282,7 @@ class _chatPageState extends State<chatPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                widget.userModel.name ?? 'chatUnknownUser'.tr,
+                                widget.userModel.name ?? 'Unknown',
                                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -208,7 +307,7 @@ class _chatPageState extends State<chatPage> {
                                           ),
                                         ),
                                       Text(
-                                        userData['status'] ?? 'chatOffline'.tr,
+                                        userData['status'] ?? 'Offline',
                                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                           color: isOnline ? Colors.greenAccent : Colors.grey,
                                         ),
@@ -238,47 +337,108 @@ class _chatPageState extends State<chatPage> {
                     child: StreamBuilder<List<ChatModel>>(
                       stream: chatController.getMessages(widget.userModel.id!),
                       builder: (context, snapshot) {
+
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
-                        } else if (snapshot.data == null || snapshot.data!.isEmpty) {
-                          return Center(child: Text('chatNoMessages'.tr));
-                        } else {
-                          final messages = snapshot.data!;
+                        }
 
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _scrollToBottom();
-                            chatController.fetchSmartReplies(messages);
-                          });
+                        if (snapshot.hasError) {
+                          print("STREAM ERROR: ${snapshot.error}");
+                          return const Center(child: Text('Data Error', style: TextStyle(color: Colors.redAccent)));
+                        }
 
-                          return ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.only(top: 100, left: 10, right: 10),
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              final message = messages[index];
-                              if (message.senderId != profileController.currentUser.value.id && message.readStatus != 'read') {
-                                chatController.updateMessageReadStatus(chatController.getRoomId(widget.userModel.id!), message.id!);
-                              }
-                              return SenderChat(
-                                sms: message.message,
-                                isComing: message.senderId != profileController.currentUser.value.id,
-                                status: MessageStatus.values.firstWhere(
-                                      (e) => e.toString() == 'MessageStatus.${message.readStatus}',
-                                  orElse: () => MessageStatus.unknown,
-                                ),
-                                timestamp: message.timestamp,
-                                index: index,
-                                messageId: message.id!,
-                                senderId: message.senderId!,
-                              );
-                            },
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.chat_bubble_outline, size: 50, color: Colors.white.withOpacity(0.2)),
+                                const SizedBox(height: 16),
+                                Text('No messages yet', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                              ],
+                            ),
                           );
                         }
+
+                        final messages = snapshot.data!;
+
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _scrollToBottom();
+                          chatController.fetchSmartReplies(messages);
+                        });
+
+                        return ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.only(top: 100, left: 10, right: 10, bottom: 20),
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) {
+                            final message = messages[index];
+                            final String msgId = message.id ?? "";
+                            final String msgSenderId = message.senderId ?? "unknown";
+                            final String myId = profileController.currentUser.value.id ?? "unknown";
+
+                            if (msgId.isNotEmpty && msgSenderId != myId && message.readStatus != 'read') {
+                              chatController.updateMessageReadStatus(
+                                  chatController.getRoomId(widget.userModel.id!),
+                                  msgId
+                              );
+                            }
+
+                            return SenderChat(
+                              sms: message.message,
+                              isComing: msgSenderId != myId,
+                              status: MessageStatus.values.firstWhere(
+                                    (e) => e.toString() == 'MessageStatus.${message.readStatus}',
+                                orElse: () => MessageStatus.unknown,
+                              ),
+                              timestamp: message.timestamp,
+                              index: index,
+                              messageId: msgId.isEmpty ? "unknown_$index" : msgId,
+                              senderId: msgSenderId,
+                              imageUrl: message.imageUrl,
+                            );
+                          },
+                        );
                       },
                     ),
                   ),
 
-                  // Typing Indicator
+                  // --- NEW: V.O.I.D. TYPING SPINNER ---
+                  Obx(() {
+                    if (chatController.isVoidTyping.value) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(left: 14, bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.black87,
+                            border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                              bottomRight: Radius.circular(20),
+                              bottomLeft: Radius.circular(5),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.smart_toy, size: 14, color: Theme.of(context).colorScheme.primary),
+                              const SizedBox(width: 8),
+                              Text("V.O.I.D. is thinking...", style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12)),
+                              const SizedBox(width: 10),
+                              SizedBox(height: 12, width: 12, child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary)),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
+                  // ------------------------------------
+
                   StreamBuilder<bool>(
                     stream: chatController.getTypingStatus(widget.userModel.id!),
                     builder: (context, snapshot) {
@@ -333,6 +493,30 @@ class _chatPageState extends State<chatPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+
+                  // Image Uploading Indicator
+                  Obx(() {
+                    if (imagePickerController.isUploading.value) {
+                      return Container(
+                        margin: const EdgeInsets.only(left: 10, bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary)),
+                            const SizedBox(width: 10),
+                            const Text("Uploading media...", style: TextStyle(fontSize: 12, color: Colors.white70)),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
 
                   Obx(() {
                     if (chatController.smartReplies.isEmpty && !chatController.isFetchingReplies.value) {
@@ -410,7 +594,7 @@ class _chatPageState extends State<chatPage> {
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.add_circle_outline, color: Colors.grey),
-                                onPressed: () {},
+                                onPressed: _showAttachmentMenu,
                               ),
                               Expanded(
                                 child: Container(

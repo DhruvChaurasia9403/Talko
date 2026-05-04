@@ -1,64 +1,76 @@
-import 'dart:convert';
-import 'package:chatting/Model/ChatModel.dart';
 import 'package:chatting/Model/UserModel.dart';
-
-ChatRoomModel chatRoomModelFromJson(String str) => ChatRoomModel.fromJson(json.decode(str));
-String chatRoomModelToJson(ChatRoomModel data) => json.encode(data.toJson());
 
 class ChatRoomModel {
   String? id;
   UserModel? sender;
   UserModel? receiver;
-  List<ChatModel>? messages;
-  String? unReadMessageNo;
+  List<String>? participants;
   String? lastMessage;
-  DateTime? lastMessageTimeStamp;
+  String? unReadMessageNo;
   DateTime? timeStamp;
-  List<String>? participants; // <-- ADD THIS LINE
+  DateTime? lastMessageTimeStamp;
+  String? lastMessageSenderId; // <-- THE CORE FIX
+
+  bool? isGroup;
+  String? groupName;
+  String? groupIcon;
+  List<String>? adminIds;
 
   ChatRoomModel({
     this.id,
     this.sender,
     this.receiver,
-    this.messages,
-    this.unReadMessageNo,
+    this.participants,
     this.lastMessage,
-    this.lastMessageTimeStamp,
+    this.unReadMessageNo,
     this.timeStamp,
-    this.participants, // <-- ADD THIS LINE
+    this.lastMessageTimeStamp,
+    this.lastMessageSenderId, // <-- NEW
+    this.isGroup = false,
+    this.groupName,
+    this.groupIcon,
+    this.adminIds,
   });
 
-  factory ChatRoomModel.fromJson(Map<String, dynamic> json) => ChatRoomModel(
-    id: json["id"],
-    sender: json["sender"] != null ? UserModel.fromJson(json["sender"]) : null,
-    receiver: json["receiver"] != null ? UserModel.fromJson(json["receiver"]) : null,
-    messages: json["messages"] != null
-        ? List<ChatModel>.from(json["messages"].map((x) => ChatModel.fromJson(x)))
-        : [],
-    unReadMessageNo: json["unReadMessageNo"],
-    lastMessage: json["lastMessage"],
-    lastMessageTimeStamp: json["lastMessageTimeStamp"] != null
-        ? DateTime.parse(json["lastMessageTimeStamp"])
-        : null,
-    timeStamp: json["timeStamp"] != null
-        ? DateTime.parse(json["timeStamp"])
-        : null,
-    participants: json["participants"] != null // <-- ADD THIS BLOCK
-        ? List<String>.from(json["participants"].map((x) => x))
-        : null,
-  );
+  ChatRoomModel.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    sender = json['sender'] != null ? UserModel.fromJson(json['sender']) : null;
+    receiver = json['receiver'] != null ? UserModel.fromJson(json['receiver']) : null;
+    participants = json['participants'] != null ? List<String>.from(json['participants']) : null;
+    lastMessage = json['lastMessage'];
+    unReadMessageNo = json['unReadMessageNo'];
+    timeStamp = json['timeStamp'] != null ? DateTime.parse(json['timeStamp']) : null;
+    lastMessageTimeStamp = json['lastMessageTimeStamp'] != null ? DateTime.parse(json['lastMessageTimeStamp']) : null;
+    lastMessageSenderId = json['lastMessageSenderId']; // <-- NEW
+    isGroup = json['isGroup'] ?? false;
+    groupName = json['groupName'];
+    groupIcon = json['groupIcon'];
+    adminIds = json['adminIds'] != null ? List<String>.from(json['adminIds']) : null;
+  }
 
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "sender": sender?.toJson(),
-    "receiver": receiver?.toJson(),
-    "messages": messages?.map((x) => x.toJson()).toList() ?? [],
-    "unReadMessageNo": unReadMessageNo,
-    "lastMessage": lastMessage,
-    "lastMessageTimeStamp": lastMessageTimeStamp?.toIso8601String(),
-    "timeStamp": timeStamp?.toIso8601String(),
-    "participants": participants != null // <-- ADD THIS LINE
-        ? List<dynamic>.from(participants!.map((x) => x))
-        : null,
-  };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    if (sender != null) {
+      data['sender'] = sender!.toJson();
+    }
+    if (receiver != null) {
+      data['receiver'] = receiver!.toJson();
+    }
+    data['participants'] = participants;
+    data['lastMessage'] = lastMessage;
+    data['unReadMessageNo'] = unReadMessageNo;
+    if (timeStamp != null) {
+      data['timeStamp'] = timeStamp!.toIso8601String();
+    }
+    if (lastMessageTimeStamp != null) {
+      data['lastMessageTimeStamp'] = lastMessageTimeStamp!.toIso8601String();
+    }
+    data['lastMessageSenderId'] = lastMessageSenderId; // <-- NEW
+    data['isGroup'] = isGroup;
+    data['groupName'] = groupName;
+    data['groupIcon'] = groupIcon;
+    data['adminIds'] = adminIds;
+    return data;
+  }
 }

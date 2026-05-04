@@ -4,6 +4,7 @@ import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/ChatController.dart';
 import 'package:chatting/Controller/ProfileController.dart';
 import 'package:chatting/Pages/Chat/Widgets/MessagesStatus.dart';
+import 'package:chatting/Pages/Chat/Widgets/VideoPlayerItem.dart'; // <-- NEW IMPORT
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -50,6 +51,9 @@ class SenderChat extends StatelessWidget {
         ? Theme.of(context).colorScheme.primary
         : (isMe ? Colors.black87 : Colors.white);
 
+    // --- NEW: Detect if media is a video ---
+    final bool isVideo = imageUrl != null && (imageUrl!.toLowerCase().contains('.mp4') || imageUrl!.toLowerCase().contains('.mov'));
+
     return Obx(() {
       bool isSelected = chatController.selectedMessageIds.contains(messageId);
 
@@ -59,7 +63,6 @@ class SenderChat extends StatelessWidget {
           chatController.toggleMessageSelection(messageId);
         },
         onTap: () {
-          // If we are currently in selection mode, tapping selects more messages instead of doing nothing
           if (chatController.selectedMessageIds.isNotEmpty) {
             chatController.toggleMessageSelection(messageId);
           }
@@ -120,14 +123,18 @@ class SenderChat extends StatelessWidget {
                                   ),
                                 ),
 
+                              // --- NEW: RENDER VIDEO OR IMAGE ---
                               if (imageUrl != null && imageUrl!.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: ClipRRect(
+                                  child: isVideo
+                                      ? VideoPlayerItem(videoUrl: imageUrl!)
+                                      : ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: Image.network(imageUrl!, fit: BoxFit.cover),
                                   ),
                                 ),
+                              // ----------------------------------
 
                               if (sms != null && sms!.isNotEmpty)
                                 Text(
@@ -153,20 +160,25 @@ class SenderChat extends StatelessWidget {
                                     ),
                                   if (isMe) ...[
                                     const SizedBox(width: 4),
-                                    SvgPicture.asset(
-                                      status == MessageStatus.read
-                                          ? AssetsImage.doubleBlueTickSVG
-                                          : status == MessageStatus.delivered
-                                          ? AssetsImage.doubleTickSVG
-                                          : status == MessageStatus.sent
-                                          ? AssetsImage.singleTickSVG
-                                          : AssetsImage.errorSVG,
-                                      height: 12,
-                                      width: 12,
-                                      colorFilter: status != MessageStatus.read
-                                          ? const ColorFilter.mode(Colors.black54, BlendMode.srcIn)
-                                          : null,
-                                    ),
+                                    // --- WORLD CLASS UI: THE PENDING CLOCK ---
+                                    if (status == MessageStatus.unknown)
+                                      const Icon(Icons.access_time, size: 12, color: Colors.white54)
+                                    else
+                                      SvgPicture.asset(
+                                        status == MessageStatus.read
+                                            ? AssetsImage.doubleBlueTickSVG
+                                            : status == MessageStatus.delivered
+                                            ? AssetsImage.doubleTickSVG
+                                            : status == MessageStatus.sent
+                                            ? AssetsImage.singleTickSVG
+                                            : AssetsImage.errorSVG,
+                                        height: 12,
+                                        width: 12,
+                                        colorFilter: status != MessageStatus.read
+                                            ? const ColorFilter.mode(Colors.white70, BlendMode.srcIn)
+                                            : null,
+                                      ),
+                                    // -----------------------------------------
                                   ]
                                 ],
                               ),
@@ -175,7 +187,6 @@ class SenderChat extends StatelessWidget {
                         ),
                       ),
 
-                      // Highlight Checkmark overlay when selected
                       if (isSelected)
                         Positioned(
                           left: isMe ? -10 : null,
