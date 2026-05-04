@@ -147,6 +147,7 @@ class ChatController extends GetxController {
     try {
       WriteBatch batch = db.batch();
 
+
       var roomUpdate = {
         "id": roomId,
         "participants": [myUid, targetUserId],
@@ -155,7 +156,9 @@ class ChatController extends GetxController {
         "lastMessageSenderId": myUid,
         "sender": profileController.currentUser.value.toJson(),
         "receiver": targetUser.toJson(),
+        "unReadMessageNo": FieldValue.increment(1), // <-- ADD THIS LINE
       };
+
       batch.set(roomRef, roomUpdate, SetOptions(merge: true));
 
       var newChatModel = ChatModel(

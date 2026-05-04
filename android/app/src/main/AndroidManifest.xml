@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <application
-        android:label="chatting"
+        android:label="Sampark"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">

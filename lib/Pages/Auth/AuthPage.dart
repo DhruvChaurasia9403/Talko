@@ -1,12 +1,13 @@
-// File: Pages/Auth/AuthPage.dart
-
-import 'dart:ui';
 import 'package:chatting/Config/images.dart';
 import 'package:chatting/Controller/AuthController.dart';
 import 'package:chatting/Pages/Welcome/WelcomeHeading.dart';
+import 'package:chatting/Widgets/PremiumSurface.dart';
+import 'package:chatting/Widgets/AmbientBackground.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../Controller/ThemeController.dart';
 
 class Authpage extends StatefulWidget {
   const Authpage({super.key});
@@ -18,6 +19,7 @@ class Authpage extends StatefulWidget {
 class _AuthpageState extends State<Authpage> {
   final TextEditingController phoneController = TextEditingController();
   final AuthController authController = Get.put(AuthController());
+  final ThemeController themeController = Get.find<ThemeController>();
 
   Country selectedCountry = Country(
     phoneCode: "91",
@@ -34,131 +36,116 @@ class _AuthpageState extends State<Authpage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background Gradient/Image
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(AssetsImage.aiEarth), // Reusing your cool asset
-                fit: BoxFit.cover,
+    // The AmbientBackground acts as our Scaffold now
+    return AmbientBackground(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const welcomeHeading(),
+            const SizedBox(height: 50),
+            Obx(() => Text(
+              "Enter your phone number",
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: themeController.text,
               ),
-            ),
-          ),
-          // Deep Blur Overlay for OLED aesthetic
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-            child: Container(color: Colors.black.withOpacity(0.7)),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            )),
+            const SizedBox(height: 10),
+            Obx(() => Text(
+              "We will send you a confirmation code",
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: themeController.subText,
+              ),
+            )),
+            const SizedBox(height: 40),
+
+            // Ambient Premium Phone Input
+            PremiumSurface(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              borderRadius: 24,
+              child: Row(
                 children: [
-                  const welcomeHeading(),
-                  const SizedBox(height: 50),
-                  Text(
-                    "Enter your phone number",
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "We will send you a confirmation code",
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white54),
-                  ),
-                  const SizedBox(height: 40),
-
-                  // World-Class Phone Input Field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: Row(
-                      children: [
-                        // Country Picker Dropdown
-                        InkWell(
-                          onTap: () {
-                            showCountryPicker(
-                              context: context,
-                              countryListTheme: CountryListThemeData(
-                                backgroundColor: Theme.of(context).colorScheme.surface,
-                                textStyle: const TextStyle(color: Colors.white),
-                                searchTextStyle: const TextStyle(color: Colors.white),
-                                bottomSheetHeight: 500,
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                              ),
-                              onSelect: (value) {
-                                setState(() {
-                                  selectedCountry = value;
-                                });
-                              },
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            child: Text(
-                              "${selectedCountry.flagEmoji} +${selectedCountry.phoneCode}",
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                          ),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(15),
+                    onTap: () {
+                      showCountryPicker(
+                        context: context,
+                        countryListTheme: CountryListThemeData(
+                          backgroundColor: themeController.bg,
+                          textStyle: TextStyle(color: themeController.text),
+                          searchTextStyle: TextStyle(color: themeController.text),
+                          bottomSheetHeight: 500,
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                         ),
-                        Container(width: 1, height: 30, color: Colors.white24), // Divider
-                        // Number Input
-                        Expanded(
-                          child: TextField(
-                            controller: phoneController,
-                            keyboardType: TextInputType.phone,
-                            style: const TextStyle(fontSize: 18, letterSpacing: 2, color: Colors.white),
-                            decoration: const InputDecoration(
-                              hintText: "99999 99999",
-                              hintStyle: TextStyle(color: Colors.white24, letterSpacing: 2),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-
-                  // Submit Button
-                  Obx(() => authController.isLoading.value
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                    onPressed: () {
-                      String phone = phoneController.text.trim();
-                      if (phone.isNotEmpty) {
-                        String fullNumber = "+${selectedCountry.phoneCode}$phone";
-                        authController.sendOtp(fullNumber);
-                      } else {
-                        Get.snackbar("Invalid", "Please enter a valid phone number");
-                      }
+                        onSelect: (value) => setState(() => selectedCountry = value),
+                      );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                      child: Obx(() => Text(
+                        "${selectedCountry.flagEmoji} +${selectedCountry.phoneCode}",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: themeController.text
+                        ),
+                      )),
                     ),
-                    child: const Text(
-                      "Continue",
-                      style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  )),
+                  ),
+                  Obx(() => Container(width: 1, height: 30, color: themeController.subText.withAlpha(50))), // Divider
+                  Expanded(
+                    child: Obx(() => TextField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: TextStyle(fontSize: 18, letterSpacing: 2, color: themeController.text),
+                      decoration: InputDecoration(
+                        hintText: "99999 99999",
+                        hintStyle: TextStyle(color: themeController.subText.withAlpha(100), letterSpacing: 2),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        fillColor: Colors.transparent,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                    )),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 40),
+
+            // Submit Button
+            Obx(() => authController.isLoading.value
+                ? Center(child: CircularProgressIndicator(color: themeController.primary))
+                : ElevatedButton(
+              onPressed: () {
+                String phone = phoneController.text.trim();
+                if (phone.isNotEmpty) {
+                  authController.sendOtp("+${selectedCountry.phoneCode}$phone");
+                } else {
+                  Get.snackbar("Invalid", "Please enter a valid phone number",
+                      backgroundColor: Colors.redAccent.withAlpha(200), colorText: Colors.white);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeController.primary,
+                foregroundColor: Colors.white,
+                elevation: themeController.isGlass ? 0 : 4,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: const Text(
+                "Continue",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.1),
+              ),
+            )),
+          ],
+        ),
       ),
     );
   }

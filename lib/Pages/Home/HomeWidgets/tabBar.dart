@@ -1,32 +1,33 @@
-// File: Pages/Home/HomeWidgets/tabBar.dart
-
 import 'package:flutter/material.dart';
-import 'package:get/get.dart'; // <-- Import Get
+import 'package:get/get.dart';
+import '../../../Controller/ThemeController.dart';
 
-tabBar(TabController tabController,BuildContext context){
+PreferredSizeWidget tabBar(TabController tabController, BuildContext context, ThemeController themeController) {
   return PreferredSize(
-    preferredSize: const Size.fromHeight(60),
-    child:  TabBar(
-      unselectedLabelStyle: Theme.of(context).textTheme.labelLarge,
-      labelStyle: Theme.of(context).textTheme.bodyLarge,
-      indicatorWeight: 10,
-      indicatorColor: Theme.of(context).colorScheme.primary,
-      indicatorSize: TabBarIndicatorSize.label,
-      indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(100)
+    preferredSize: const Size.fromHeight(50),
+    child: Obx(() => TabBar(
+      unselectedLabelStyle: TextStyle(
+          color: themeController.subText,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          fontFamily: "Poppins"
       ),
+      labelStyle: TextStyle(
+          color: themeController.primary,
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          fontFamily: "Poppins"
+      ),
+      indicatorWeight: 3,
+      indicatorColor: themeController.primary,
+      indicatorSize: TabBarIndicatorSize.label, // Underlines just the text, not the whole tab
+      dividerColor: Colors.transparent,
       controller: tabController,
       tabs: [
-        Tab(
-          text: 'homeChats'.tr, // <-- Changed
-        ),
-        Tab(
-          text: 'homeGroup'.tr, // <-- Changed
-        ),
-        Tab(
-          text: 'homeCalls'.tr, // <-- Changed
-        )
+        Tab(text: 'homeChats'.tr),
+        Tab(text: 'homeGroup'.tr),
+        Tab(text: 'homeCalls'.tr)
       ],
-    ),
+    )),
   );
 }

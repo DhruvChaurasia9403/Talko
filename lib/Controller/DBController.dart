@@ -86,6 +86,7 @@ class DBcontroller extends GetxController {
         "lastMessage": localMsg.message,
         "lastMessageTimeStamp": localMsg.timestamp?.toIso8601String() ?? DateTime.now().toIso8601String(),
         "lastMessageSenderId": localMsg.senderId,
+        "unReadMessageNo": FieldValue.increment(1), // <-- ADD THIS LINE
       }, SetOptions(merge: true));
       // -----------------------------------------------------
 
